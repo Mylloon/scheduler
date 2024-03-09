@@ -1,5 +1,6 @@
 #pragma once
 
+#include <errno.h>
 #include <unistd.h>
 
 struct scheduler;
@@ -24,5 +25,9 @@ static inline int sched_default_threads() {
  */
 int sched_init(int nthreads, int qlen, taskfunc f, void *closure);
 
-/* Enfile une nouvelle tâche (f, closure) à l'ordonanceur (s) */
+/* Enfile une nouvelle tâche (f, closure) à l'ordonanceur (s)
+ *
+ * Peut renvoyer -1 avec errno = EAGAIN quand on dépasse la capacité de
+ * l'ordonanceur.
+ * */
 int sched_spawn(taskfunc f, void *closure, struct scheduler *s);
