@@ -1,0 +1,37 @@
+\documentclass{article}
+
+\usepackage[T1]{fontenc} % encoding
+\renewcommand{\familydefault}{\sfdefault} % sans-serif font
+
+\usepackage[french]{babel} % langages
+\frenchsetup{SmallCapsFigTabCaptions=false}
+
+\newcommand{\anri}{Anri Kennel}
+
+\newcommand{\settitle}{Projet}
+
+\usepackage[
+  pdfauthor={\anri},    % author metadata
+  pdftitle={\settitle}, % title  metadata
+  hidelinks,            % clickable links in table of contents
+]{hyperref}
+
+\title{\settitle}
+
+\title{Projet}
+\author{\anri\thanks{\anri : 22302653} \\
+Programmation système avancée $\cdot$ Université Paris Cité}
+\date{Année universitaire 2023-2024}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\clearpage
+
+\section{Description}
+\dots
+
+\section{Statistiques}
+\dots
+
+\end{document}

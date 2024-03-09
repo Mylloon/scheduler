@@ -1,0 +1,19 @@
+Projet de programmation système avancée
+=======================================
+
+Compilation
+-----------
+
+  make
+
+Ce qui créer l'exécutable `projet.out`.
+
+Lancement
+---------
+
+  ./projet.out
+
+Info
+----
+
+Anri Kennel 22302653
