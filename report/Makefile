@@ -4,7 +4,7 @@ TEX   = $(NAME).tex
 SRC   = $(TEX)
 PDF   = $(TEX:.tex=.pdf)
 
-TEXMK = latexmk -shell-escape -lualatex
+TEXMK = latexmk -shell-escape -lualatex -interaction=nonstopmode
 
 all: $(PDF)
 
