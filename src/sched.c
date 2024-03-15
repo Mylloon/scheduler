@@ -10,18 +10,18 @@ int sched_init(int nthreads, int qlen, taskfunc f, void *closure) {
 
 int sched_spawn(taskfunc f, void *closure, struct scheduler *s) {
   pthread_t thread;
-  int errno;
+  int err;
 
   // Création d'un thread pour la tâche
-  if ((errno = pthread_create(&thread, NULL, (void *(*)(void *))f, closure)) !=
+  if ((err = pthread_create(&thread, NULL, (void *(*)(void *))f, closure)) !=
       0) {
     fprintf(stderr, "pthread_create error %d\n", errno);
     return -1;
   }
 
   // Attend la fin du thread
-  if ((errno = pthread_join(thread, NULL)) != 0) {
-    fprintf(stderr, "error %d\n", errno);
+  if ((err = pthread_join(thread, NULL)) != 0) {
+    fprintf(stderr, "pthread_join error %d\n", errno);
     return -1;
   }
 
