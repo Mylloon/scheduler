@@ -13,7 +13,8 @@ int sched_spawn(taskfunc f, void *closure, struct scheduler *s) {
   int errno;
 
   // Création d'un thread pour la tâche
-  if ((errno = pthread_create(&thread, NULL, (void *)f, closure)) != 0) {
+  if ((errno = pthread_create(&thread, NULL, (void *(*)(void *))f, closure)) !=
+      0) {
     fprintf(stderr, "pthread_create error %d\n", errno);
     return -1;
   }
