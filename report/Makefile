@@ -1,8 +1,8 @@
-NAME  = document
+NAME = document
 
-TEX   = $(NAME).tex
-SRC   = $(TEX)
-PDF   = $(TEX:.tex=.pdf)
+TEX = $(NAME).tex
+SRC = $(TEX)
+PDF = $(TEX:.tex=.pdf)
 
 TEXMK = latexmk -shell-escape -lualatex -interaction=nonstopmode
 

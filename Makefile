@@ -1,8 +1,8 @@
-CC = gcc
-RM = rm -r
-TAR      = tar -cf
-CP       = cp -r
-MKDIR    = mkdir -p
+CC    = gcc
+RM    = rm -rf
+TAR   = tar -cf
+CP    = cp -r
+MKDIR = mkdir -p
 
 SRC_DIR = src
 INC_DIR = includes
@@ -40,11 +40,11 @@ pdf-make:
 	$(MAKE)
 
 pdf-clean:
-	cd report && \
+	@cd report && \
 	$(MAKE) clean
 
 clean: pdf-clean
-	-$(RM) $(OBJETS) "$(EXE).$(EXE_EXT)" "$(ARCHIVE).tar"
+	$(RM) $(OBJETS) "$(EXE).$(EXE_EXT)" "$(ARCHIVE).tar"
 
 archive: pdf-make
 	$(MKDIR) "$(ARCHIVE)"
