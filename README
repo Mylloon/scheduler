@@ -6,12 +6,12 @@ Compilation
 
   make
 
-Ce qui créer l'exécutable `projet.out`.
+Ce qui créer l'exécutable `ordonnanceur.elf`.
 
 Lancement
 ---------
 
-  ./projet.out
+  ./ordonnanceur.elf
 
 Info
 ----

@@ -12,8 +12,8 @@ OBJETS  = $(patsubst %.c,%.o,$(notdir $(SOURCES)))
 CFLAGS  = -std=gnu11 -pedantic
 LDFLAGS =
 
-EXE     = projet
-EXE_EXT = out
+EXE     = ordonnanceur
+EXE_EXT = elf
 
 ARCHIVE = kennel
 PDF_DIR = report
