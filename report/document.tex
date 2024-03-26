@@ -13,15 +13,28 @@
 \newcommand{\settitle}{\href{https://www.irif.fr/~jch/enseignement/systeme/projet.pdf}{\titlename}}
 
 \usepackage[
-  pdfauthor={\anri},    % author metadata
+  pdfauthor={\anri},     % author metadata
   pdftitle={\titlename}, % title  metadata
-  hidelinks,            % clickable links in table of contents
+  hidelinks,             % clickable links in table of contents
 ]{hyperref}
 
+% Add \subject to title
+\makeatletter
+\providecommand{\extra}[1]{
+  \apptocmd{\@author}{
+      \vspace*{0.2em}
+    \end{tabular}
+    \begin{tabular}[t]{c}
+    #1}{}{}
+}
+\makeatother
+
+
 \title{\settitle}
-\author{\anri\thanks{\anri : 22302653} \\
-Programmation système avancée $\cdot$ Université Paris Cité}
+\author{\anri\thanks{\anri : 22302653}}
 \date{Année universitaire 2023-2024}
+
+\extra{Programmation système avancée $\cdot$ Université Paris Cité}
 
 \begin{document}
 \maketitle
