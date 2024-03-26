@@ -13,7 +13,7 @@ CFLAGS  = -std=gnu11 -pedantic
 LDFLAGS =
 
 EXE     = ordonnanceur
-EXE_EXT = elf
+EXE_EXT = .elf
 
 ARCHIVE = kennel
 PDF_DIR = report
@@ -22,7 +22,7 @@ PDF_DIR = report
 	$(CC) -c $< -o $@ $(CFLAGS)
 
 compilation: $(OBJETS)
-	$(CC) -o $(EXE).$(EXE_EXT) $(OBJETS) $(LDFLAGS)
+	$(CC) -o $(EXE)$(EXE_EXT) $(OBJETS) $(LDFLAGS)
 
 main: CFLAGS += -O3
 main: compilation
@@ -44,7 +44,7 @@ pdf-clean:
 	$(MAKE) clean
 
 clean: pdf-clean
-	$(RM) $(OBJETS) "$(EXE).$(EXE_EXT)" "$(ARCHIVE).tar"
+	$(RM) $(OBJETS) "$(EXE)$(EXE_EXT)" "$(ARCHIVE).tar"
 
 archive: pdf-make
 	$(MKDIR) "$(ARCHIVE)"
