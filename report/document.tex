@@ -10,7 +10,7 @@
 
 \newcommand{\titlename}{
   Projet : Un ordonnanceur par work stealing}
-\newcommand{\settitle}{\href{https://www.irif.fr/~jch/enseignement/systeme/projet.pdf}{\titlename}}
+\newcommand{\mytitle}{\href{https://www.irif.fr/~jch/enseignement/systeme/projet.pdf}{\titlename}}
 
 \usepackage[
   pdfauthor={\anri},     % author metadata
@@ -18,23 +18,23 @@
   hidelinks,             % clickable links in table of contents
 ]{hyperref}
 
-% Add \subject to title
+% Add \extra info to title
 \makeatletter
 \providecommand{\extra}[1]{
   \apptocmd{\@author}{
-      \vspace*{0.2em}
     \end{tabular}
+    \par\vspace*{0.7em}
     \begin{tabular}[t]{c}
     #1}{}{}
 }
 \makeatother
 
 
-\title{\settitle}
+\title{\mytitle}
 \author{\anri\thanks{\anri : 22302653}}
+\extra{Programmation système avancée $\cdot$ Université Paris Cité}
 \date{Année universitaire 2023-2024}
 
-\extra{Programmation système avancée $\cdot$ Université Paris Cité}
 
 \begin{document}
 \maketitle
