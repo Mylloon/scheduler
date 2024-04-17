@@ -27,10 +27,10 @@ compilation: $(OBJETS)
 main: CFLAGS += -O3
 main: compilation
 
-dev: CFLAGS += -Wall -Wextra -Wshadow -Wcast-align -Wstrict-prototypes
-dev: CFLAGS += -fanalyzer -fsanitize=undefined -g -Og
-dev: LDFLAGS += -fsanitize=undefined
-dev: compilation
+debug: CFLAGS  += -Wall -Wextra -Wshadow -Wcast-align -Wstrict-prototypes
+debug: CFLAGS  += -fanalyzer -fsanitize=undefined -g -Og
+debug: LDFLAGS += -fsanitize=undefined
+debug: compilation
 
 all:
 	main
