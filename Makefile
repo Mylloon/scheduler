@@ -21,19 +21,19 @@ PDF_DIR = report
 %.o: src/%.c
 	$(CC) -c $< -o $@ $(CFLAGS)
 
-compilation: $(OBJETS)
-	$(CC) -o $(EXE)$(EXE_EXT) $(OBJETS) $(LDFLAGS)
-
-main: CFLAGS += -O3
-main: compilation
+release: CFLAGS += -O3
+release: compilation
 
 debug: CFLAGS  += -Wall -Wextra -Wshadow -Wcast-align -Wstrict-prototypes
 debug: CFLAGS  += -fanalyzer -fsanitize=undefined -g -Og
 debug: LDFLAGS += -fsanitize=undefined
 debug: compilation
 
+compilation: $(OBJETS)
+	$(CC) -o $(EXE)$(EXE_EXT) $(OBJETS) $(LDFLAGS)
+
 all:
-	main
+	release
 
 pdf-make:
 	cd report && \
