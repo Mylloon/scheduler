@@ -99,19 +99,20 @@ int benchmark(int argc, char **argv) {
       break;
     case 'n':
       n = atoi(optarg);
-      if (n <= 0) {
-        goto usage;
-      }
       break;
     case 't':
       nthreads = atoi(optarg);
-      if (nthreads <= 0) {
-        goto usage;
-      }
       break;
     default:
       goto usage;
     }
+  }
+
+  if (n <= 0) {
+    goto usage;
+  }
+  if (nthreads < 0 && !serial) {
+    goto usage;
   }
 
   a = malloc(n * sizeof(int));
