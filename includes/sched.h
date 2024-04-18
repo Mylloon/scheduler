@@ -1,13 +1,30 @@
 #pragma once
 
-#include <errno.h>
+#include <pthread.h>
 #include <unistd.h>
+
+#define MAX_TASKS 1024
 
 struct scheduler;
 
 typedef void (*taskfunc)(void *, struct scheduler *);
 
-static inline int sched_default_threads() {
+struct scheduler {
+  /* Mutex qui protège la pile */
+  pthread_mutex_t mutex;
+
+  /* Indicateur de changement d'état de la pile */
+  pthread_cond_t cond;
+
+  /* Position actuelle dans la pile */
+  int top;
+
+  /* Tâches */
+  taskfunc tasks[MAX_TASKS];
+  void *closures[MAX_TASKS];
+};
+
+static inline int sched_default_threads(void) {
   return sysconf(_SC_NPROCESSORS_ONLN);
 }
 
