@@ -3,25 +3,29 @@
 #include <pthread.h>
 #include <unistd.h>
 
-#define MAX_TASKS 1024
+#define MAX_TASKS 81920
 
 struct scheduler;
 
 typedef void (*taskfunc)(void *, struct scheduler *);
 
+typedef struct task_info {
+  taskfunc f;
+  void *closure;
+} taskinfo;
+
 struct scheduler {
-  /* Mutex qui protège la pile */
+  /* Mutex qui protège la structure */
   pthread_mutex_t mutex;
 
-  /* Indicateur de changement d'état de la pile */
+  /* Indicateur de changement d'état */
   pthread_cond_t cond;
 
   /* Position actuelle dans la pile */
   int top;
 
   /* Tâches */
-  taskfunc tasks[MAX_TASKS];
-  void *closures[MAX_TASKS];
+  taskinfo tasks[MAX_TASKS];
 };
 
 static inline int sched_default_threads(void) {

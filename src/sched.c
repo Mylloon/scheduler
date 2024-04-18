@@ -10,27 +10,30 @@ void *worker_routine(void *arg) {
   struct scheduler *s = (struct scheduler *)arg;
 
   while (1) {
-    // Attente d'un changement d'état
-    pthread_cond_wait(&s->cond, &s->mutex);
-
     pthread_mutex_lock(&s->mutex);
+
+    // S'il n'y a plus de tâches à exécuter
     if (s->top == -1) {
-      // Il n'y a plus de tâches à exécuter
+      // printf("rien a faire, on attend\n");
+      pthread_cond_wait(&s->cond, &s->mutex);
       pthread_mutex_unlock(&s->mutex);
-      break;
+      continue;
     }
+    // printf("on a un truc a faire!! (top: %d)\n", s->top);
 
     // Extrait la tâche de la pile
-    taskfunc f = s->tasks[s->top];
-    void *closure = s->closures[s->top];
+    taskfunc f = s->tasks[s->top].f;
+    void *closure = s->tasks[s->top].closure;
     s->top--;
 
     pthread_mutex_unlock(&s->mutex);
 
     // Exécute la tâche
+    // printf("lance la tache\n");
     f(closure, s);
 
     // Signale que la tâche est terminée
+    // printf("tache terminée\n");
     pthread_cond_signal(&s->cond);
   }
 
@@ -42,7 +45,7 @@ int sched_init(int nthreads, int qlen, taskfunc f, void *closure) {
     nthreads = sched_default_threads();
   }
 
-  // Actuellement on n'utilises pas qlen
+  // TODO : Actuellement on n'utilises pas qlen
   // => On utilise une pile de taille fixe
   (void)qlen;
 
@@ -67,7 +70,7 @@ int sched_init(int nthreads, int qlen, taskfunc f, void *closure) {
   }
 
   if (sched_spawn(f, closure, &sched) != 0) {
-    fprintf(stderr, "Can't create a new task\n");
+    fprintf(stderr, "Can't create the initial task\n");
     return -1;
   }
 
@@ -82,20 +85,20 @@ int sched_init(int nthreads, int qlen, taskfunc f, void *closure) {
 }
 
 int sched_spawn(taskfunc f, void *closure, struct scheduler *s) {
+  // printf("attend spawn\n");
   pthread_mutex_lock(&s->mutex);
 
   if (s->top + 1 >= MAX_TASKS) {
     pthread_mutex_unlock(&s->mutex);
     errno = EAGAIN;
-    fprintf(stderr, "Stack full\n");
+    fprintf(stderr, "Stack is full\n");
     return -1;
   }
 
-  s->top++;
-  s->tasks[s->top] = f;
-  s->closures[s->top] = closure;
+  s->tasks[++s->top] = (taskinfo){f, closure};
 
   pthread_mutex_unlock(&s->mutex);
+
   pthread_cond_signal(&s->cond);
 
   return 0;
