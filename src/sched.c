@@ -104,6 +104,8 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
         }
     }
 
+    free(sched.tasks);
+
     return 1;
 }
 
