@@ -27,8 +27,8 @@ struct scheduler {
   /* Tâches */
   taskinfo tasks[MAX_TASKS];
 
-  /* Nombre de tâches en cours */
-  int ntasks;
+  /* Si tout est terminé */
+  int exit;
 };
 
 static inline int sched_default_threads(void) {

@@ -12,32 +12,40 @@ void *worker_routine(void *arg) {
   while (1) {
     pthread_mutex_lock(&s->mutex);
 
-    if (s->ntasks == 0) {
+    if (s->exit == 1) {
       pthread_mutex_unlock(&s->mutex);
+      printf("finalement..rien a faire, ciao\n");
+
       break;
     }
 
     // S'il on a rien à faire
     if (s->top == -1) {
+      // printf("attend..\n");
       pthread_cond_wait(&s->cond, &s->mutex);
       pthread_mutex_unlock(&s->mutex);
-
+      // printf("reveillé!\n");
       continue;
     }
+    // printf("lancement tâche #%d\n", s->top);
 
     // Extrait la tâche de la pile
     taskfunc f = s->tasks[s->top].f;
     void *closure = s->tasks[s->top].closure;
     s->top--;
-    s->ntasks--;
-
-    pthread_cond_signal(&s->cond);
     pthread_mutex_unlock(&s->mutex);
 
     // Exécute la tâche
     f(closure, s);
 
-    // Signale que la tâche est terminée
+    // Signale s'il n'y a plus rien à faire
+    if (s->top == -1) {
+      printf("va falloir partir\n");
+      pthread_mutex_lock(&s->mutex);
+      s->exit = 1;
+      pthread_cond_broadcast(&s->cond);
+      pthread_mutex_unlock(&s->mutex);
+    }
   }
 
   return NULL;
@@ -53,7 +61,7 @@ int sched_init(int nthreads, int qlen, taskfunc f, void *closure) {
   (void)qlen;
 
   sched.top = -1;
-  sched.ntasks = 0;
+  sched.exit = 0;
 
   if (pthread_mutex_init(&sched.mutex, NULL) != 0) {
     fprintf(stderr, "Can't init mutex\n");
@@ -99,7 +107,6 @@ int sched_spawn(taskfunc f, void *closure, struct scheduler *s) {
   }
 
   s->tasks[++s->top] = (taskinfo){f, closure};
-  s->ntasks++;
 
   pthread_cond_signal(&s->cond);
   pthread_mutex_unlock(&s->mutex);
