@@ -19,6 +19,9 @@ struct scheduler {
     /* Mutex qui protège la structure */
     pthread_mutex_t mutex;
 
+    /* Nombre de threads instanciés */
+    int nthreads;
+
     /* Nombre de threads en attente */
     int nthsleep;
 
@@ -50,6 +53,7 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
     } else if(nthreads == 0) {
         nthreads = sched_default_threads();
     }
+    sched.nthreads = nthreads;
 
     if(pthread_mutex_init(&sched.mutex, NULL) != 0) {
         fprintf(stderr, "Can't init mutex\n");
@@ -133,14 +137,18 @@ worker_routine(void *arg)
 
         // S'il on a rien à faire
         if(s->top == -1) {
-            // tentative avec nthsleep???? pourquoi 10 aaaaa j'ai 12 coeurs??
             s->nthsleep++;
-            if(s->nthsleep >= 10) {
+            if(s->nthsleep == s->nthreads) {
+                // Signal a tout les threads que il n'y a plus rien à faire
+                // si un thread attend une tâche
+                pthread_cond_broadcast(&s->cond);
                 pthread_mutex_unlock(&s->mutex);
+
                 break;
             }
 
             pthread_cond_wait(&s->cond, &s->mutex);
+            s->nthsleep--;
             pthread_mutex_unlock(&s->mutex);
             continue;
         }
@@ -153,13 +161,6 @@ worker_routine(void *arg)
 
         // Exécute la tâche
         f(closure, s);
-
-        // Signale s'il n'y a plus rien à faire
-        if(s->top == -1) {
-            pthread_mutex_lock(&s->mutex);
-            pthread_cond_broadcast(&s->cond);
-            pthread_mutex_unlock(&s->mutex);
-        }
     }
 
     return NULL;
