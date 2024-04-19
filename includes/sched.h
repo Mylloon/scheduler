@@ -10,29 +10,31 @@ struct scheduler;
 typedef void (*taskfunc)(void *, struct scheduler *);
 
 typedef struct task_info {
-  taskfunc f;
-  void *closure;
+    taskfunc f;
+    void *closure;
 } taskinfo;
 
 struct scheduler {
-  /* Mutex qui protège la structure */
-  pthread_mutex_t mutex;
+    /* Mutex qui protège la structure */
+    pthread_mutex_t mutex;
 
-  /* Indicateur de changement d'état */
-  pthread_cond_t cond;
+    /* Indicateur de changement d'état */
+    pthread_cond_t cond;
 
-  /* Position actuelle dans la pile */
-  int top;
+    /* Position actuelle dans la pile */
+    int top;
 
-  /* Tâches */
-  taskinfo tasks[MAX_TASKS];
+    /* Tâches */
+    taskinfo tasks[MAX_TASKS];
 
-  /* Si tout est terminé */
-  int exit;
+    /* Si tout est terminé */
+    int exit;
 };
 
-static inline int sched_default_threads(void) {
-  return sysconf(_SC_NPROCESSORS_ONLN);
+static inline int
+sched_default_threads(void)
+{
+    return sysconf(_SC_NPROCESSORS_ONLN);
 }
 
 /* Lance l'ordonnanceur

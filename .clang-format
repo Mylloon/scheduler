@@ -1,0 +1,5 @@
+IndentWidth: 4
+InsertBraces: true
+BreakBeforeBraces: Linux
+AlwaysBreakAfterReturnType: TopLevelDefinitions
+SpaceBeforeParens: Never
