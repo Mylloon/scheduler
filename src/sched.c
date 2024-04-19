@@ -74,7 +74,7 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
     pthread_t threads[nthreads];
     for(int i = 0; i < nthreads; ++i) {
         if(pthread_create(&threads[i], NULL, sched_worker, &sched) != 0) {
-            fprintf(stderr, "Can't create the thread %d", i);
+            fprintf(stderr, "Can't create the thread %d\n", i);
 
             if(i > 0) {
                 fprintf(stderr, ", cancelling already created threads...\n");
