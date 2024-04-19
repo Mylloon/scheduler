@@ -36,7 +36,7 @@ struct scheduler {
 static struct scheduler sched;
 
 /* Lance une tâche de la pile */
-void *worker_routine(void *);
+void *sched_worker(void *);
 
 int
 sched_init(int nthreads, int qlen, taskfunc f, void *closure)
@@ -73,7 +73,7 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
 
     pthread_t threads[nthreads];
     for(int i = 0; i < nthreads; ++i) {
-        if(pthread_create(&threads[i], NULL, worker_routine, &sched) != 0) {
+        if(pthread_create(&threads[i], NULL, sched_worker, &sched) != 0) {
             fprintf(stderr, "Can't create the thread %d", i);
 
             if(i > 0) {
@@ -128,7 +128,7 @@ sched_spawn(taskfunc f, void *closure, struct scheduler *s)
 }
 
 void *
-worker_routine(void *arg)
+sched_worker(void *arg)
 {
     struct scheduler *s = (struct scheduler *)arg;
 
