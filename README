@@ -1,17 +1,17 @@
 Projet de programmation système avancée
 =======================================
 
-Compilation
+Compilation optimisée
 -----------
 
   make
 
 Ce qui créer l'exécutable `ordonnanceur.elf`.
 
-Lancement
+Lancement utilisant tous les cœurs disponibles :
 ---------
 
-  ./ordonnanceur.elf
+  ./ordonnanceur.elf -t 0
 
 Info
 ----
