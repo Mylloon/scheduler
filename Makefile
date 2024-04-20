@@ -21,7 +21,7 @@ PDF_DIR = report
 %.o: src/%.c
 	$(CC) -c $< -o $@ $(CFLAGS)
 
-release: CFLAGS += -O3
+release: CFLAGS += -O2
 release: compilation
 
 debug: CFLAGS  += -Wall -Wextra -Wshadow -Wcast-align -Wstrict-prototypes
