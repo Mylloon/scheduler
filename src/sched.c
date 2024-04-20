@@ -71,6 +71,9 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
         return -1;
     }
 
+    // Initialise l'aléatoire
+    srand(time(NULL));
+
     pthread_t threads[nthreads];
     for(int i = 0; i < nthreads; ++i) {
         if(pthread_create(&threads[i], NULL, sched_worker, &sched) != 0) {
@@ -155,7 +158,13 @@ sched_worker(void *arg)
             continue;
         }
 
-        // Extrait la tâche de la pile
+        // Extrait une tâche aléatoire de la liste
+        int random_index = rand() % (s->top + 1);
+
+        struct task_info echange = s->tasks[random_index];
+        s->tasks[random_index] = s->tasks[s->top];
+        s->tasks[s->top] = echange;
+
         taskfunc f = s->tasks[s->top].f;
         void *closure = s->tasks[s->top].closure;
         s->top--;
