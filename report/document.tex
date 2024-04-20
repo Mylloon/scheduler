@@ -6,16 +6,21 @@
 \usepackage[french]{babel} % langages
 \frenchsetup{SmallCapsFigTabCaptions=false}
 
-\newcommand{\anri}{Anri Kennel}
 
-\newcommand{\titlename}{
-  Projet : Un ordonnanceur par work stealing}
-\newcommand{\mytitle}{\href{https://www.irif.fr/~jch/enseignement/systeme/projet.pdf}{\titlename}}
+\newcommand{\titlename}{Projet : Un ordonnanceur par work stealing}
+\newcommand{\mytitle}{
+  \href{https://www.irif.fr/~jch/enseignement/systeme/projet.pdf}{\titlename}}
+
+\newcommand{\anri}{Anri Kennel}
+\newcommand{\mysubject}{Programmation système avancée}
+\newcommand{\mylocation}{Université Paris Cité}
+\newcommand{\mymail}{mailto:anri.kennel@etu.u-paris.fr}
 
 \usepackage[
-  pdfauthor={\anri},     % author metadata
-  pdftitle={\titlename}, % title  metadata
-  hidelinks,             % clickable links in table of contents
+  pdfauthor={\anri},       % author  metadata
+  pdftitle={\titlename},   % title   metadata
+  pdfsubject={\mysubject}, % subject metadata
+  hidelinks,               % clickable links in table of contents
 ]{hyperref}
 
 % Add \extra info to title
@@ -31,8 +36,8 @@
 
 
 \title{\mytitle}
-\author{\anri\thanks{\anri : 22302653}}
-\extra{Programmation système avancée $\cdot$ Université Paris Cité}
+\author{\href{\mymail}{\anri}\thanks{\anri : 22302653}}
+\extra{\mysubject~$\cdot$ \mylocation}
 \date{Année universitaire 2023-2024}
 
 
@@ -43,18 +48,6 @@
 
 \section{Description}
 \dots
-
-% \subsection[Pile VS File]{Choix d'une pile par rapport à une file}
-% Vu qu'on "vole" des tâches aux autres threads, on récupère directement
-% ce que l'on veut dans une pile au lieu de devoir faire des calculs en plus
-% pour une file.
-%
-% De plus, la tâche la plus récente est celle qui est en haut de la pile, c'est
-% ce que l'on veut récupérer.
-%
-% En résumé, une pile est préférée à une file dans un ordonnanceur en raison de
-% sa simplicité, de son efficacité dans la gestion de la charge de travail.
-
 
 \section{Statistiques}
 \dots
