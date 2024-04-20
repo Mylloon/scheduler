@@ -15,9 +15,9 @@ LDFLAGS =
 EXE     = ordonnanceur
 EXE_EXT = .elf
 
-ARCHIVE     = kennel
-PDF_DIR     = report
-PDF_NEWNAME = Rapport de projet
+ARCHIVE_NAME = kennel
+PDF_DIR      = report
+PDF_NEWNAME  = Rapport de projet
 
 %.o: src/%.c
 	$(CC) -c $< -o $@ $(CFLAGS)
@@ -45,11 +45,11 @@ pdf-clean:
 	$(MAKE) clean
 
 clean: pdf-clean
-	$(RM) $(OBJETS) "$(EXE)$(EXE_EXT)" "$(ARCHIVE).tar"
+	$(RM) $(OBJETS) "$(EXE)$(EXE_EXT)" "$(ARCHIVE_NAME).tar"
 
 archive: pdf-make
-	$(MKDIR) "$(ARCHIVE)"
-	$(CP) "$(SRC_DIR)" "$(INC_DIR)" Makefile README "$(ARCHIVE)"
-	$(CP) "$(wildcard $(PDF_DIR)/*.pdf)" "$(ARCHIVE)/$(PDF_NEWNAME).pdf"
-	$(TAR) "$(ARCHIVE).tar" "$(ARCHIVE)"
-	$(RM) "$(ARCHIVE)"
+	$(MKDIR) "$(ARCHIVE_NAME)"
+	$(CP) "$(SRC_DIR)" "$(INC_DIR)" Makefile README "$(ARCHIVE_NAME)"
+	$(CP) "$(wildcard $(PDF_DIR)/*.pdf)" "$(ARCHIVE_NAME)/$(PDF_NEWNAME).pdf"
+	$(TAR) "$(ARCHIVE_NAME).tar" "$(ARCHIVE_NAME)"
+	$(RM) "$(ARCHIVE_NAME)"
