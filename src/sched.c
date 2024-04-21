@@ -11,6 +11,11 @@ struct task_info {
     taskfunc f;
 };
 
+struct robber {
+    pthread_cond_t cond;
+    pthread_mutex_t mutex;
+};
+
 struct scheduler {
     /* Taille des piles */
     int qlen;
@@ -29,6 +34,9 @@ struct scheduler {
 
     /* Positions actuelle dans la pile */
     int *top;
+
+    /* Infos pour le vol */
+    struct robber rob;
 };
 
 /* Ordonnanceur partagé */
@@ -67,6 +75,10 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
         nthreads = sched_default_threads();
     }
     sched.nthreads = nthreads;
+
+    // Initialisation des infos de vol
+    sched.rob =
+        (struct robber){PTHREAD_COND_INITIALIZER, PTHREAD_MUTEX_INITIALIZER};
 
     // Initialisation des mutex de chaque processus
     if(!(sched.mutex = malloc(sched.nthreads * sizeof(pthread_mutex_t)))) {
@@ -175,6 +187,9 @@ sched_init_cleanup(int ret_code)
         sched.top = NULL;
     }
 
+    pthread_cond_destroy(&sched.rob.cond);
+    pthread_mutex_destroy(&sched.rob.mutex);
+
     return ret_code;
 }
 
@@ -237,19 +252,22 @@ sched_worker(void *arg)
     }
 
     while(1) {
+        pthread_mutex_lock(&s->rob.mutex);
         pthread_mutex_lock(&s->mutex[curr_th]);
 
         // Si rien à faire
         if(s->top[curr_th] == -1) {
             // Cherche un thread (avec le + de tâches en attente) à voler
             int stolen = -1;
+
+            pthread_cond_wait(&s->rob.cond, &s->rob.mutex);
             for(int i = 0, max_tasks = -1; i < s->nthreads; ++i) {
                 if(i == curr_th) {
                     continue; // On ne se vole pas soi-même
                 }
 
                 // Verrouille le mutex du thread candidat
-                pthread_mutex_lock(&s->mutex[i]);
+                /* pthread_mutex_lock(&s->mutex[i]); */
 
                 if(s->top[i] > max_tasks) {
                     max_tasks = s->top[i];
@@ -257,12 +275,11 @@ sched_worker(void *arg)
                 }
 
                 // Déverrouille le mutex du thread candidat
-                pthread_mutex_unlock(&s->mutex[i]);
+                /* pthread_mutex_unlock(&s->mutex[i]); */
             }
 
             // Vole une tâche à un autre thread
             if(stolen >= 0) {
-                printf("vole!\n");
                 struct task_info theft;
                 pthread_mutex_lock(&s->mutex[stolen]);
 
@@ -276,6 +293,7 @@ sched_worker(void *arg)
                 pthread_mutex_unlock(&s->mutex[stolen]);
 
                 pthread_mutex_unlock(&s->mutex[curr_th]);
+                pthread_mutex_unlock(&s->rob.mutex);
 
                 // Rajoute la tâche sur notre pile
                 sched_spawn_core(theft.f, theft.closure, s, curr_th);
@@ -284,6 +302,9 @@ sched_worker(void *arg)
             }
 
             pthread_mutex_unlock(&s->mutex[curr_th]);
+            pthread_cond_broadcast(&s->rob.cond);
+            pthread_mutex_unlock(&s->rob.mutex);
+            printf("%d se tire\n", curr_th);
             break;
         }
 
@@ -295,6 +316,9 @@ sched_worker(void *arg)
 
         // Exécute la tâche
         f(closure, s);
+
+        pthread_cond_broadcast(&s->rob.cond);
+        pthread_mutex_unlock(&s->rob.mutex);
     }
 
     return NULL;
