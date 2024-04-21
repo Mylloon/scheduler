@@ -17,7 +17,7 @@ struct scheduler {
     /* Taille de la pile */
     int qlen;
 
-    /* Mutex qui protège la structure */
+    /* Mutex qui protège les piles */
     pthread_mutex_t *mutex;
 
     /* Nombre de threads instanciés */
@@ -26,10 +26,10 @@ struct scheduler {
     /* Nombre de threads en attente */
     int nthsleep;
 
-    /* Pile de tâches */
+    /* Piles de tâches */
     struct task_info **tasks;
 
-    /* Position actuelle dans la pile */
+    /* Positions actuelle dans la pile */
     int *top;
 };
 
