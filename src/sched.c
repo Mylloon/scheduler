@@ -107,6 +107,7 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
         return sched_init_cleanup(-1);
     }
 
+    // Créer les threads
     if(!(sched.threads = malloc(sched.nthreads * sizeof(pthread_t *)))) {
         perror("Threads");
         return sched_init_cleanup(-1);
