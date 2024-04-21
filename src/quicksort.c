@@ -1,5 +1,7 @@
 #include "../includes/quicksort.h"
 
+#include <time.h>
+
 int
 partition(int *a, int lo, int hi)
 {
