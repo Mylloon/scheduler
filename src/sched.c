@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 struct task_info {
     void *closure;
@@ -26,7 +27,7 @@ struct scheduler {
     int nthsleep;
 
     /* Pile de tâches */
-    struct task_info *tasks;
+    struct task_info **tasks;
 
     /* Position actuelle dans la pile */
     int *top;
@@ -45,7 +46,9 @@ int
 sched_init(int nthreads, int qlen, taskfunc f, void *closure)
 {
     sched.cond = NULL;
+    sched.mutex = NULL;
     sched.tasks = NULL;
+    sched.top = NULL;
 
     if(qlen <= 0) {
         fprintf(stderr, "qlen must be greater than 0\n");
@@ -96,9 +99,16 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
         sched.top[i] = -1;
     }
 
-    if((sched.tasks = malloc(qlen * sizeof(struct task_info))) == NULL) {
-        perror("Stack");
+    // Allocation mémoire pour la pile de chaque processus
+    if(!(sched.tasks = malloc(sched.nthreads * sizeof(struct task_info *)))) {
+        perror("Stack list");
         return sched_init_cleanup(-1);
+    }
+    for(int i = 0; i < sched.nthreads; ++i) {
+        if(!(sched.tasks[i] = malloc(qlen * sizeof(struct task_info)))) {
+            fprintf(stderr, "Stack for thread %d: %s\n", i, strerror(errno));
+            return sched_init_cleanup(-1);
+        }
     }
 
     pthread_t threads[nthreads];
@@ -154,6 +164,12 @@ sched_init_cleanup(int ret_code)
     }
 
     if(sched.tasks) {
+        for(int i = 0; i < sched.nthreads; ++i) {
+            if(sched.tasks[i]) {
+                free(sched.tasks[i]);
+                sched.tasks[i] = NULL;
+            }
+        }
 
         free(sched.tasks);
         sched.tasks = NULL;
@@ -179,7 +195,7 @@ sched_spawn(taskfunc f, void *closure, struct scheduler *s)
         return -1;
     }
 
-    s->tasks[++s->top[0]] = (struct task_info){closure, f};
+    s->tasks[0][++s->top[0]] = (struct task_info){closure, f};
 
     pthread_cond_signal(&s->cond[0]);
     pthread_mutex_unlock(&s->mutex[0]);
@@ -214,8 +230,8 @@ sched_worker(void *arg)
         }
 
         // Extrait la tâche de la pile
-        taskfunc f = s->tasks[s->top[0]].f;
-        void *closure = s->tasks[s->top[0]].closure;
+        taskfunc f = s->tasks[0][s->top[0]].f;
+        void *closure = s->tasks[0][s->top[0]].closure;
         s->top[0]--;
         pthread_mutex_unlock(&s->mutex[0]);
 
