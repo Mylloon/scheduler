@@ -207,12 +207,9 @@ current_thread(struct scheduler *s)
 int
 sched_spawn_core(taskfunc f, void *closure, struct scheduler *s, int core)
 {
-    // printf("%d locking (a)\n", core);
     pthread_mutex_lock(&s->mutex[core]);
-    // printf("%d locked (a)\n", core);
 
     if(s->top[core] + 1 >= s->qlen) {
-        // printf("%d unlock (a)\n", core);
         pthread_mutex_unlock(&s->mutex[core]);
         errno = EAGAIN;
         fprintf(stderr, "Stack is full\n");
@@ -222,7 +219,6 @@ sched_spawn_core(taskfunc f, void *closure, struct scheduler *s, int core)
     s->top[core]++;
     s->tasks[core][s->top[core]] = (struct task_info){closure, f};
 
-    // printf("%d unlock (a)\n", core);
     pthread_mutex_unlock(&s->mutex[core]);
 
     return 0;
@@ -241,9 +237,7 @@ sched_worker(void *arg)
     }
 
     while(1) {
-        // printf("%d locking (b)\n", curr_th);
         pthread_mutex_lock(&s->mutex[curr_th]);
-        // printf("%d locked (b)\n", curr_th);
 
         // Si rien à faire
         if(s->top[curr_th] == -1) {
@@ -270,9 +264,7 @@ sched_worker(void *arg)
             if(stolen >= 0) {
                 printf("vole!\n");
                 struct task_info theft;
-                // printf("%d locking (d)\n", stolen);
                 pthread_mutex_lock(&s->mutex[stolen]);
-                // printf("%d locked (d)\n", stolen);
 
                 // Actuellement on prend la tâche la plus ancienne en
                 // inversant la première et la dernière
@@ -281,10 +273,8 @@ sched_worker(void *arg)
                 s->tasks[stolen][0] = s->tasks[stolen][s->top[stolen]];
                 s->top[stolen]--;
 
-                // printf("%d unlock (d)\n", stolen);
                 pthread_mutex_unlock(&s->mutex[stolen]);
 
-                // printf("%d unlock (b)\n", curr_th);
                 pthread_mutex_unlock(&s->mutex[curr_th]);
 
                 // Rajoute la tâche sur notre pile
@@ -301,7 +291,6 @@ sched_worker(void *arg)
         taskfunc f = s->tasks[curr_th][s->top[curr_th]].f;
         void *closure = s->tasks[curr_th][s->top[curr_th]].closure;
         s->top[curr_th]--;
-        // printf("%d unlock (b)\n", curr_th);
         pthread_mutex_unlock(&s->mutex[curr_th]);
 
         // Exécute la tâche
