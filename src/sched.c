@@ -195,7 +195,8 @@ sched_spawn(taskfunc f, void *closure, struct scheduler *s)
         return -1;
     }
 
-    s->tasks[0][++s->top[0]] = (struct task_info){closure, f};
+    s->top[0]++;
+    s->tasks[0][s->top[0]] = (struct task_info){closure, f};
 
     pthread_cond_signal(&s->cond[0]);
     pthread_mutex_unlock(&s->mutex[0]);
