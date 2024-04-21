@@ -42,6 +42,9 @@ void *sched_worker(void *);
 /* Nettoie les opérations effectuées par l'initialisation de l'ordonnanceur */
 int sched_init_cleanup(int);
 
+/* sched_spawn sur un coeur spécifique */
+int sched_spawn_core(taskfunc, void *, struct scheduler *, int);
+
 int
 sched_init(int nthreads, int qlen, taskfunc f, void *closure)
 {
@@ -131,7 +134,7 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
         }
     }
 
-    if(sched_spawn(f, closure, &sched) < 0) {
+    if(sched_spawn_core(f, closure, &sched, 0) < 0) {
         fprintf(stderr, "Can't create the initial task\n");
         return sched_init_cleanup(-1);
     }
@@ -186,20 +189,31 @@ sched_init_cleanup(int ret_code)
 int
 sched_spawn(taskfunc f, void *closure, struct scheduler *s)
 {
-    pthread_mutex_lock(&s->mutex[0]);
+    // TODO: trouver le coeur actuelle, car on ajoute toujours
+    // "une nouvelle tâche dans la même pile"
+    int core = 0;
 
-    if(s->top[0] + 1 >= s->qlen) {
-        pthread_mutex_unlock(&s->mutex[0]);
+    return sched_spawn_core(f, closure, s, core);
+}
+
+int
+sched_spawn_core(taskfunc f, void *closure, struct scheduler *s, int core)
+{
+
+    pthread_mutex_lock(&s->mutex[core]);
+
+    if(s->top[core] + 1 >= s->qlen) {
+        pthread_mutex_unlock(&s->mutex[core]);
         errno = EAGAIN;
         fprintf(stderr, "Stack is full\n");
         return -1;
     }
 
-    s->top[0]++;
-    s->tasks[0][s->top[0]] = (struct task_info){closure, f};
+    s->top[core]++;
+    s->tasks[core][s->top[core]] = (struct task_info){closure, f};
 
-    pthread_cond_signal(&s->cond[0]);
-    pthread_mutex_unlock(&s->mutex[0]);
+    pthread_cond_signal(&s->cond[core]);
+    pthread_mutex_unlock(&s->mutex[core]);
 
     return 0;
 }
@@ -207,34 +221,46 @@ sched_spawn(taskfunc f, void *closure, struct scheduler *s)
 void *
 sched_worker(void *arg)
 {
+    // TODO: Récupère le processus courand (ID = index tableau schedulers)
+    int curr_th = 0;
+
     struct scheduler *s = (struct scheduler *)arg;
 
     while(1) {
-        pthread_mutex_lock(&s->mutex[0]);
+        pthread_mutex_lock(&s->mutex[curr_th]);
 
         // S'il on a rien à faire
-        if(s->top[0] == -1) {
+        if(s->top[curr_th] == -1) {
             s->nthsleep++;
             if(s->nthsleep == s->nthreads) {
                 // Signal a tout les threads que il n'y a plus rien à faire
                 // si un thread attend une tâche
-                pthread_cond_broadcast(&s->cond[0]);
-                pthread_mutex_unlock(&s->mutex[0]);
+                pthread_cond_broadcast(&s->cond[curr_th]);
+                pthread_mutex_unlock(&s->mutex[curr_th]);
 
                 break;
             }
 
-            pthread_cond_wait(&s->cond[0], &s->mutex[0]);
+            // TODO: Essayer de voler une tâche à un autre coeur
+            if(0) {
+                // TODO:
+                // - Trouver un coeur avec le + de tâches en attente
+                // - Prendre la tâche la plus ancienne (pas LIFO)
+                // - La rajouter sur notre pile
+                continue;
+            }
+
+            pthread_cond_wait(&s->cond[curr_th], &s->mutex[curr_th]);
             s->nthsleep--;
-            pthread_mutex_unlock(&s->mutex[0]);
+            pthread_mutex_unlock(&s->mutex[curr_th]);
             continue;
         }
 
         // Extrait la tâche de la pile
-        taskfunc f = s->tasks[0][s->top[0]].f;
-        void *closure = s->tasks[0][s->top[0]].closure;
-        s->top[0]--;
-        pthread_mutex_unlock(&s->mutex[0]);
+        taskfunc f = s->tasks[curr_th][s->top[curr_th]].f;
+        void *closure = s->tasks[curr_th][s->top[curr_th]].closure;
+        s->top[curr_th]--;
+        pthread_mutex_unlock(&s->mutex[curr_th]);
 
         // Exécute la tâche
         f(closure, s);
