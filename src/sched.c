@@ -29,6 +29,9 @@ struct scheduler {
     /* Piles de tâches */
     struct task_info **tasks;
 
+    /* Liste des threads */
+    pthread_t *threads;
+
     /* Positions actuelle dans la pile */
     int *top;
 };
@@ -51,6 +54,7 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
     sched.cond = NULL;
     sched.mutex = NULL;
     sched.tasks = NULL;
+    sched.threads = NULL;
     sched.top = NULL;
 
     if(qlen <= 0) {
@@ -114,15 +118,18 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
         }
     }
 
-    pthread_t threads[nthreads];
+    if(!(sched.threads = malloc(sched.nthreads * sizeof(pthread_t *)))) {
+        perror("Threads");
+        return sched_init_cleanup(-1);
+    }
     for(int i = 0; i < nthreads; ++i) {
-        if(pthread_create(&threads[i], NULL, sched_worker, &sched) != 0) {
+        if(pthread_create(&sched.threads[i], NULL, sched_worker, &sched) != 0) {
             fprintf(stderr, "Can't create the thread %d\n", i);
 
             if(i > 0) {
                 fprintf(stderr, ", cancelling already created threads...\n");
                 for(int j = 0; j < i; ++j) {
-                    if(pthread_cancel(threads[j]) != 0) {
+                    if(pthread_cancel(sched.threads[j]) != 0) {
                         fprintf(stderr, "Can't cancel the thread %d\n", j);
                     }
                 }
@@ -140,7 +147,7 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
     }
 
     for(int i = 0; i < nthreads; ++i) {
-        if((pthread_join(threads[i], NULL) != 0)) {
+        if((pthread_join(sched.threads[i], NULL) != 0)) {
             fprintf(stderr, "Can't wait the thread %d\n", i);
             return sched_init_cleanup(-1);
         }
@@ -176,6 +183,11 @@ sched_init_cleanup(int ret_code)
 
         free(sched.tasks);
         sched.tasks = NULL;
+    }
+
+    if(sched.threads) {
+        free(sched.threads);
+        sched.threads = NULL;
     }
 
     if(sched.top) {
@@ -221,7 +233,7 @@ sched_spawn_core(taskfunc f, void *closure, struct scheduler *s, int core)
 void *
 sched_worker(void *arg)
 {
-    // TODO: Récupère le processus courand (ID = index tableau schedulers)
+    // TODO: Récupère le processus courant (ID = index tableau schedulers)
     int curr_th = 0;
 
     struct scheduler *s = (struct scheduler *)arg;
