@@ -48,6 +48,9 @@ int sched_init_cleanup(int);
 /* sched_spawn sur un coeur spécifique */
 int sched_spawn_core(taskfunc, void *, struct scheduler *, int);
 
+/* Récupère l'index du thread courant */
+int current_thread(void);
+
 int
 sched_init(int nthreads, int qlen, taskfunc f, void *closure)
 {
@@ -201,11 +204,15 @@ sched_init_cleanup(int ret_code)
 int
 sched_spawn(taskfunc f, void *closure, struct scheduler *s)
 {
-    // TODO: trouver le coeur actuelle, car on ajoute toujours
-    // "une nouvelle tâche dans la même pile"
-    int core = 0;
+    // On ajoute la tâche sur la pile du thread courant
+    return sched_spawn_core(f, closure, s, current_thread());
+}
 
-    return sched_spawn_core(f, closure, s, core);
+int
+current_thread()
+{
+    /* TODO: Récupère le thread courant */
+    return 0;
 }
 
 int
