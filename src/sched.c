@@ -14,7 +14,7 @@ struct scheduler {
     /* Indicateurs de changement d'état */
     pthread_cond_t *cond;
 
-    /* Taille de la pile */
+    /* Taille des pile */
     int qlen;
 
     /* Mutex qui protège les piles */
