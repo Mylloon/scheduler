@@ -6,23 +6,6 @@
 \usepackage[french]{babel} % langages
 \frenchsetup{SmallCapsFigTabCaptions=false}
 
-
-\newcommand{\titlename}{Projet : Un ordonnanceur par work stealing}
-\newcommand{\mytitle}{
-  \href{https://www.irif.fr/~jch/enseignement/systeme/projet.pdf}{\titlename}}
-
-\newcommand{\anri}{Anri Kennel}
-\newcommand{\mysubject}{Programmation système avancée}
-\newcommand{\mylocation}{Université Paris Cité}
-\newcommand{\mymail}{mailto:anri.kennel@etu.u-paris.fr}
-
-\usepackage[
-  pdfauthor={\anri},       % author  metadata
-  pdftitle={\titlename},   % title   metadata
-  pdfsubject={\mysubject}, % subject metadata
-  hidelinks,               % clickable links in table of contents
-]{hyperref}
-
 % Add \extra info to title
 \makeatletter
 \providecommand{\extra}[1]{
@@ -34,10 +17,24 @@
 }
 \makeatother
 
+\def\titleName{Projet : Un ordonnanceur par work stealing}
+\def\docTitle{\href{https://www.irif.fr/~jch/enseignement/systeme/projet.pdf}{\titleName}}
 
-\title{\mytitle}
-\author{\href{\mymail}{\anri}\thanks{\anri : 22302653}}
-\extra{\mysubject~$\cdot$ \mylocation}
+\def\anri{Anri Kennel}
+\def\docSubject{Programmation système avancée}
+\def\docLocation{Université Paris Cité}
+\def\authorMail{mailto:anri.kennel@etu.u-paris.fr}
+
+\usepackage[
+  pdfauthor={\anri},        % author  metadata
+  pdftitle={\titleName},    % title   metadata
+  pdfsubject={\docSubject}, % subject metadata
+  hidelinks,                % clickable links in table of contents
+]{hyperref}
+
+\title{\docTitle}
+\author{\href{\authorMail}{\anri}\thanks{\anri : 22302653}}
+\extra{\docSubject~$\cdot$ \docLocation}
 \date{Année universitaire 2023-2024}
 
 
