@@ -45,7 +45,7 @@ void *sched_worker(void *);
 /* Nettoie les opérations effectuées par l'initialisation de l'ordonnanceur */
 int sched_init_cleanup(int);
 
-/* sched_spawn sur un coeur spécifique */
+/* sched_spawn sur un thread spécifique */
 int sched_spawn_core(taskfunc, void *, struct scheduler *, int);
 
 /* Récupère l'index du thread courant */
@@ -144,6 +144,7 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
         }
     }
 
+    // Ajoute la tâche initiale
     if(sched_spawn_core(f, closure, &sched, 0) < 0) {
         fprintf(stderr, "Can't create the initial task\n");
         return sched_init_cleanup(-1);
@@ -283,6 +284,7 @@ sched_worker(void *arg)
             pthread_cond_wait(&s->cond[curr_th], &s->mutex[curr_th]);
             s->nthsleep--;
             pthread_mutex_unlock(&s->mutex[curr_th]);
+
             continue;
         }
 
