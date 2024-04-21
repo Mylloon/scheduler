@@ -1,9 +1,11 @@
+\DocumentMetadata{testphase = {phase-II,sec,toc,graphic,minipage,float,text}}
 \documentclass{article}
 
 \usepackage[T1]{fontenc} % encoding
 \renewcommand{\familydefault}{\sfdefault} % sans-serif font
 
-\usepackage[french]{babel} % langages
+% Langages
+\usepackage[french]{babel}
 \frenchsetup{SmallCapsFigTabCaptions=false}
 
 % Add \extra info to title
@@ -17,13 +19,18 @@
 }
 \makeatother
 
+% Code integration
+\usepackage{minted}
+\setminted[c]{autogobble,frame=lines}
+\usemintedstyle{emacs}
+
 \def\titleName{Projet : Un ordonnanceur par work stealing}
 \def\docTitle{\href{https://www.irif.fr/~jch/enseignement/systeme/projet.pdf}{\titleName}}
 
 \def\anri{Anri Kennel}
+\def\authorMail{mailto:anri.kennel@etu.u-paris.fr}
 \def\docSubject{Programmation système avancée}
 \def\docLocation{Université Paris Cité}
-\def\authorMail{mailto:anri.kennel@etu.u-paris.fr}
 
 \usepackage[
   pdfauthor={\anri},        % author  metadata
@@ -40,6 +47,7 @@
 
 \begin{document}
 \maketitle
+\flushbottom
 \tableofcontents
 \clearpage
 
