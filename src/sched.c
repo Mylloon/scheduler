@@ -11,7 +11,7 @@ struct task_info {
 };
 
 struct scheduler {
-    /* Indicateur de changement d'état */
+    /* Indicateurs de changement d'état */
     pthread_cond_t *cond;
 
     /* Taille de la pile */
