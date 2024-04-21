@@ -44,6 +44,11 @@
 \extra{\docSubject~$\cdot$ \docLocation}
 \date{Année universitaire 2023-2024}
 
+\newcommand{\docref}[1]{\textit{\nameref{#1}}} % italic nameref
+
+% Aliases
+\def\coeurs{c\oe{}urs}
+
 
 \begin{document}
 \maketitle
@@ -51,10 +56,97 @@
 \tableofcontents
 \clearpage
 
-\section{Description}
+\section{Descriptions}
+Description des différents algorithmes implémentés.
+
+\subsection{Naïf}
+Cette implémentation naïve est celle fourni dans le fichier
+\texttt{quicksort.c} avec le mode \texttt{serial}.
+
+\subsection[Threads sans gestion]{%
+  Threads\footnote{processus léger} sans gestion}
+Cette implémentation correspond à simplement démarrer un nouveau thread
+pour chaque nouvelle tâche.
+
+\subsection{Threads avec pile}\label{desc:th_pile}
+Pour cette implémentation, on garde en mémoire une pile,
+et on démarre un nombre fixe de threads et à chaque ajout d'une tâche,
+on l'empile. Chaque thread récupère la dernière tâche ajoutée à la pile.
+
+\subsubsection{Sélection aléatoire de tâche}
+Même fonctionnement que dans l'algorithme de \docref{desc:th_pile}, sauf
+qu'au lieu de récupérer la dernière tâche, on récupère une tâche
+aléatoire de la pile.
+
+\subsection{Répartition par \coeurs}
 \dots
 
 \section{Statistiques}
+Chaque implémentation a été testée avec l'optimisation de niveau 2
+de \texttt{gcc}, parfois sur 2 machines.
+
+\def\mone{\textit{Machine 1}} % fixe
+\def\mtwo{\textit{Machine 2}} % portable
+
+\begin{enumerate}
+  \item \textbf{12 threads} pour la \mone.
+  \item \textbf{8 threads} pour la \mtwo.
+\end{enumerate}
+
+\subsection{Naïf}\label{stats:naive}
+\begin{description}
+  \item[\mone] Le programme a été lancé \textbf{100 fois}.
+        Le temps moyen d'exécution a été de \textbf{0,855 secs}
+  \item[\mtwo] Le programme a été lancé \textbf{\dots fois}.
+        Le temps moyen d'exécution a été de \textbf{\dots secs}
+\end{description}
+
+Ce programme ne bénéficie pas de toute la puissance de la machine.
+
+\subsection{Threads sans gestion}\label{stats:th_ges}
+\begin{description}
+  \item[\mone] Le programme a été lancé \textbf{10 fois}.
+        Le temps moyen d'exécution a été de \textbf{35,985 secs}
+  \item[\mtwo] Le programme a été lancé \textbf{\dots fois}.
+        Le temps moyen d'exécution a été de \textbf{\dots secs}
+\end{description}
+
+La création des threads pour chaque tâche créer un énorme
+goulot d'étranglement qui réduit de grandement les performances.
+
+\subsection{Threads avec pile}
+\begin{description}
+  \item[\mone] Le programme a été lancé \textbf{100 fois}.
+        Le temps moyen d'exécution a été de \textbf{0,258 secs}
+  \item[\mtwo] Le programme a été lancé \textbf{\dots fois}.
+        Le temps moyen d'exécution a été de \textbf{\dots secs}
+\end{description}
+
+Le lancement de nouveau thread étant limité par machine, les performances
+sont grandement améliorées par rapport aux tests de \docref{stats:th_ges}.
+
+Également grâce au fait que désormais on utilise les \coeurs~de notre CPU,
+les performances sont aussi améliorées par rapport aux tests de
+\docref{stats:naive}.
+
+\subsubsection{Sélection aléatoire de tâche}
+\begin{description}
+  \item[\mone] Le programme a été lancé \textbf{100 fois}.
+        Le temps moyen d'exécution a été de \textbf{0,390 secs}
+  \item[\mtwo] Le programme a été lancé \textbf{\dots fois}.
+        Le temps moyen d'exécution a été de \textbf{\dots secs}
+\end{description}
+
+\dots
+
+\subsection{Répartition par \coeurs}
+\begin{description}
+  \item[\mone] Le programme a été lancé \textbf{\dots fois}.
+        Le temps moyen d'exécution a été de \textbf{\dots secs}
+  \item[\mtwo] Le programme a été lancé \textbf{\dots fois}.
+        Le temps moyen d'exécution a été de \textbf{\dots secs}
+\end{description}
+
 \dots
 
 \end{document}
