@@ -41,7 +41,7 @@ pdf-make:
 	$(MAKE)
 
 pdf-clean:
-	@cd report && \
+	-@cd report && \
 	$(MAKE) clean
 
 clean: pdf-clean
