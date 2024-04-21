@@ -61,6 +61,8 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
     }
     sched.nthreads = nthreads;
 
+    sched.nthsleep = 0;
+
     if(pthread_mutex_init(&sched.mutex, NULL) != 0) {
         fprintf(stderr, "Can't init mutex\n");
         return -1;
