@@ -11,7 +11,7 @@ struct task_info {
 
 struct scheduler {
     /* Indicateur de changement d'état */
-    pthread_cond_t cond;
+    pthread_cond_t *cond;
 
     /* Taille de la pile */
     int qlen;
@@ -38,9 +38,15 @@ static struct scheduler sched;
 /* Lance une tâche de la pile */
 void *sched_worker(void *);
 
+/* Nettoie les opérations effectuées par l'initialisation de l'ordonnanceur */
+int cleanup_init(int);
+
 int
 sched_init(int nthreads, int qlen, taskfunc f, void *closure)
 {
+    sched.cond = NULL;
+    sched.tasks = NULL;
+
     if(qlen <= 0) {
         fprintf(stderr, "qlen must be greater than 0\n");
         return -1;
@@ -60,15 +66,22 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
         return -1;
     }
 
-    if(pthread_cond_init(&sched.cond, NULL) != 0) {
-        fprintf(stderr, "Can't init condition variable\n");
-        return -1;
+    // Initialisation des variables de conditions de chaque processus
+    if(!(sched.cond = malloc(sched.nthreads * sizeof(pthread_cond_t)))) {
+        perror("Variable conditions");
+        return cleanup_init(-1);
+    }
+    for(int i = 0; i < sched.nthreads; ++i) {
+        if(pthread_cond_init(&sched.cond[i], NULL) != 0) {
+            fprintf(stderr, "Can't init condition variable for thread %d\n", i);
+            return cleanup_init(-1);
+        }
     }
 
     sched.top = -1;
     if((sched.tasks = malloc(qlen * sizeof(struct task_info))) == NULL) {
-        fprintf(stderr, "Can't allocate memory for stack\n");
-        return -1;
+        perror("Stack");
+        return cleanup_init(-1);
     }
 
     pthread_t threads[nthreads];
@@ -87,26 +100,40 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
                 fprintf(stderr, "\n");
             }
 
-            free(sched.tasks);
-            return -1;
+            return cleanup_init(-1);
         }
     }
 
     if(sched_spawn(f, closure, &sched) < 0) {
         fprintf(stderr, "Can't create the initial task\n");
-        return -1;
+        return cleanup_init(-1);
     }
 
     for(int i = 0; i < nthreads; ++i) {
         if((pthread_join(threads[i], NULL) != 0)) {
             fprintf(stderr, "Can't wait the thread %d\n", i);
-            return -1;
+            return cleanup_init(-1);
         }
     }
 
-    free(sched.tasks);
+    return cleanup_init(1);
+}
 
-    return 1;
+int
+cleanup_init(int ret_code)
+{
+    if(!sched.cond) {
+        free(sched.cond);
+        sched.cond = NULL;
+    }
+
+    if(!sched.tasks) {
+
+        free(sched.tasks);
+        sched.tasks = NULL;
+    }
+
+    return ret_code;
 }
 
 int
@@ -123,7 +150,7 @@ sched_spawn(taskfunc f, void *closure, struct scheduler *s)
 
     s->tasks[++s->top] = (struct task_info){closure, f};
 
-    pthread_cond_signal(&s->cond);
+    pthread_cond_signal(&s->cond[0]);
     pthread_mutex_unlock(&s->mutex);
 
     return 0;
@@ -143,13 +170,13 @@ sched_worker(void *arg)
             if(s->nthsleep == s->nthreads) {
                 // Signal a tout les threads que il n'y a plus rien à faire
                 // si un thread attend une tâche
-                pthread_cond_broadcast(&s->cond);
+                pthread_cond_broadcast(&s->cond[0]);
                 pthread_mutex_unlock(&s->mutex);
 
                 break;
             }
 
-            pthread_cond_wait(&s->cond, &s->mutex);
+            pthread_cond_wait(&s->cond[0], &s->mutex);
             s->nthsleep--;
             pthread_mutex_unlock(&s->mutex);
             continue;
