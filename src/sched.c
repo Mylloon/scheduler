@@ -249,27 +249,26 @@ sched_worker(void *arg)
         if(s->top[curr_th] == -1) {
             // Cherche un thread (avec le + de tâches en attente) à voler
             int stolen = -1;
-            /* for(int i = 0, size = -1; i < s->nthreads; ++i) {
+            for(int i = 0, max_tasks = -1; i < s->nthreads; ++i) {
                 if(i == curr_th) {
-                    // On ne se vole pas soi-même
-                    continue;
+                    continue; // On ne se vole pas soi-même
                 }
 
-                printf("%d locking (c)\n", i);
+                // Verrouille le mutex du thread candidat
                 pthread_mutex_lock(&s->mutex[i]);
-                printf("%d locked (c)\n", i);
 
-                if(s->top[i] > size) {
+                if(s->top[i] > max_tasks) {
+                    max_tasks = s->top[i];
                     stolen = i;
-                    size = s->top[i];
                 }
 
-                printf("%d unlock (c)\n", i);
+                // Déverrouille le mutex du thread candidat
                 pthread_mutex_unlock(&s->mutex[i]);
-            } */
+            }
 
             // Vole une tâche à un autre thread
             if(stolen >= 0) {
+                printf("vole!\n");
                 struct task_info theft;
                 // printf("%d locking (d)\n", stolen);
                 pthread_mutex_lock(&s->mutex[stolen]);
@@ -295,7 +294,6 @@ sched_worker(void *arg)
             }
 
             pthread_mutex_unlock(&s->mutex[curr_th]);
-            // printf("%d se tire car R à faire\n", curr_th);
             break;
         }
 
