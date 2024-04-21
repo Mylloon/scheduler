@@ -29,7 +29,7 @@ struct scheduler {
     struct task_info *tasks;
 
     /* Position actuelle dans la pile */
-    int top;
+    int *top;
 };
 
 /* Ordonnanceur partagé */
@@ -87,7 +87,14 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
         }
     }
 
-    sched.top = -1;
+    // Initialisation du curseur suivant l'état de la pile de chaque processus
+    if(!(sched.top = malloc(sched.nthreads * sizeof(int)))) {
+        perror("Cursor top stack\n");
+        return sched_init_cleanup(-1);
+    }
+    for(int i = 0; i < sched.nthreads; ++i) {
+        sched.top[i] = -1;
+    }
 
     if((sched.tasks = malloc(qlen * sizeof(struct task_info))) == NULL) {
         perror("Stack");
@@ -152,6 +159,11 @@ sched_init_cleanup(int ret_code)
         sched.tasks = NULL;
     }
 
+    if(sched.top) {
+        free(sched.top);
+        sched.top = NULL;
+    }
+
     return ret_code;
 }
 
@@ -160,14 +172,14 @@ sched_spawn(taskfunc f, void *closure, struct scheduler *s)
 {
     pthread_mutex_lock(&s->mutex[0]);
 
-    if(s->top + 1 >= s->qlen) {
+    if(s->top[0] + 1 >= s->qlen) {
         pthread_mutex_unlock(&s->mutex[0]);
         errno = EAGAIN;
         fprintf(stderr, "Stack is full\n");
         return -1;
     }
 
-    s->tasks[++s->top] = (struct task_info){closure, f};
+    s->tasks[++s->top[0]] = (struct task_info){closure, f};
 
     pthread_cond_signal(&s->cond[0]);
     pthread_mutex_unlock(&s->mutex[0]);
@@ -184,7 +196,7 @@ sched_worker(void *arg)
         pthread_mutex_lock(&s->mutex[0]);
 
         // S'il on a rien à faire
-        if(s->top == -1) {
+        if(s->top[0] == -1) {
             s->nthsleep++;
             if(s->nthsleep == s->nthreads) {
                 // Signal a tout les threads que il n'y a plus rien à faire
@@ -202,9 +214,9 @@ sched_worker(void *arg)
         }
 
         // Extrait la tâche de la pile
-        taskfunc f = s->tasks[s->top].f;
-        void *closure = s->tasks[s->top].closure;
-        s->top--;
+        taskfunc f = s->tasks[s->top[0]].f;
+        void *closure = s->tasks[s->top[0]].closure;
+        s->top[0]--;
         pthread_mutex_unlock(&s->mutex[0]);
 
         // Exécute la tâche
