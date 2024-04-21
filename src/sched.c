@@ -49,7 +49,7 @@ int sched_init_cleanup(int);
 int sched_spawn_core(taskfunc, void *, struct scheduler *, int);
 
 /* Récupère l'index du thread courant */
-int current_thread(void);
+int current_thread(struct scheduler *);
 
 int
 sched_init(int nthreads, int qlen, taskfunc f, void *closure)
@@ -204,21 +204,32 @@ sched_init_cleanup(int ret_code)
 int
 sched_spawn(taskfunc f, void *closure, struct scheduler *s)
 {
+    int core;
+    if((core = current_thread(s)) < 0) {
+        fprintf(stderr, "Thread not in list, who am I?\n");
+        return -1;
+    }
+
     // On ajoute la tâche sur la pile du thread courant
-    return sched_spawn_core(f, closure, s, current_thread());
+    return sched_spawn_core(f, closure, s, core);
 }
 
 int
-current_thread()
+current_thread(struct scheduler *s)
 {
-    /* TODO: Récupère le thread courant */
-    return 0;
+    pthread_t current = pthread_self();
+    for(int i = 0; i < s->nthreads; i++) {
+        if(pthread_equal(s->threads[i], current)) {
+            return i;
+        }
+    }
+
+    return -1;
 }
 
 int
 sched_spawn_core(taskfunc f, void *closure, struct scheduler *s, int core)
 {
-
     pthread_mutex_lock(&s->mutex[core]);
 
     if(s->top[core] + 1 >= s->qlen) {
@@ -240,10 +251,10 @@ sched_spawn_core(taskfunc f, void *closure, struct scheduler *s, int core)
 void *
 sched_worker(void *arg)
 {
-    // TODO: Récupère le processus courant (ID = index tableau schedulers)
-    int curr_th = 0;
-
     struct scheduler *s = (struct scheduler *)arg;
+
+    // Récupère le processus courant (index tableau)
+    int curr_th = current_thread(s);
 
     while(1) {
         pthread_mutex_lock(&s->mutex[curr_th]);
