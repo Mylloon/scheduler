@@ -3,3 +3,4 @@ InsertBraces: true
 BreakBeforeBraces: Linux
 AlwaysBreakAfterReturnType: TopLevelDefinitions
 SpaceBeforeParens: Never
+AllowShortLoopsOnASingleLine: true
