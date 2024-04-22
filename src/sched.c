@@ -262,7 +262,7 @@ sched_worker(void *arg)
             // Vol car aucune tâche trouvée
             for(int i = 0, k = rand() % (s->nthreads + 1), target;
                 i < s->nthreads; ++i) {
-                target = (i + curr_th) % s->nthreads;
+                target = (i + k) % s->nthreads;
 
                 if(s->bottom[target] != s->top[target]) {
                     // Tâche trouvée
