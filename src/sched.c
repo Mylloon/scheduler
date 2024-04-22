@@ -71,7 +71,7 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
     } else if(nthreads == 0) {
         nthreads = sched_default_threads();
     }
-    sched.nthreads = nthreads;
+    sched.nthreads = 0;
 
     sched.nthsleep = 0;
 
@@ -88,33 +88,36 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
     }
 
     // Initialisation du curseur suivant l'état de la pile de chaque processus
-    if(!(sched.top = malloc(sched.nthreads * sizeof(int)))) {
+    if(!(sched.top = malloc(nthreads * sizeof(int)))) {
         perror("Cursor top stack");
         return sched_init_cleanup(-1);
     }
-    if(!(sched.bottom = malloc(sched.nthreads * sizeof(int)))) {
+    if(!(sched.bottom = malloc(nthreads * sizeof(int)))) {
         perror("Cursor bottom stack");
         return sched_init_cleanup(-1);
     }
-    for(int i = 0; i < sched.nthreads; ++i) {
+    for(int i = 0; i < nthreads; ++i) {
         sched.top[i] = 0;
         sched.bottom[i] = 0;
     }
 
     // Allocation mémoire pour la pile de chaque processus
-    if(!(sched.tasks = malloc(sched.nthreads * sizeof(struct task_info *)))) {
+    if(!(sched.tasks = malloc(nthreads * sizeof(struct task_info *)))) {
         perror("Stack list");
         return sched_init_cleanup(-1);
     }
-    for(int i = 0; i < sched.nthreads; ++i) {
+    for(int i = 0; i < nthreads; ++i) {
         if(!(sched.tasks[i] = malloc(qlen * sizeof(struct task_info)))) {
             fprintf(stderr, "Stack for thread %d: %s\n", i, strerror(errno));
             return sched_init_cleanup(-1);
         }
     }
 
+    // Initialise l'aléatoire
+    srand(time(NULL));
+
     // Créer les threads
-    if(!(sched.threads = malloc(sched.nthreads * sizeof(pthread_t *)))) {
+    if(!(sched.threads = malloc(nthreads * sizeof(pthread_t)))) {
         perror("Threads");
         return sched_init_cleanup(-1);
     }
@@ -124,9 +127,6 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
         fprintf(stderr, "Can't create the initial task\n");
         return sched_init_cleanup(-1);
     }
-
-    // Initialise l'aléatoire
-    srand(time(NULL));
 
     // Démarre les threads
     for(int i = 0; i < nthreads; ++i) {
@@ -146,6 +146,7 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
 
             return sched_init_cleanup(-1);
         }
+        sched.nthreads++;
     }
 
     for(int i = 0; i < nthreads; ++i) {
@@ -241,10 +242,7 @@ sched_worker(void *arg)
 
     // Récupère le processus courant (index tableau)
     int curr_th;
-    if((curr_th = current_thread(s)) < 0) {
-        fprintf(stderr, "Thread unknown, exiting...\n");
-        return NULL;
-    }
+    while((curr_th = current_thread(s)) < 0);
 
     struct task_info task;
     int found;
