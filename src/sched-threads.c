@@ -1,4 +1,5 @@
 #pragma GCC diagnostic ignored "-Wcast-function-type"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 
 #include "../includes/sched.h"
 
@@ -8,10 +9,6 @@
 int
 sched_init(int nthreads, int qlen, taskfunc f, void *closure)
 {
-    // Paramètres inutilisés
-    (void)nthreads;
-    (void)qlen;
-
     sched_spawn(f, closure, NULL);
     return 0;
 }
@@ -19,9 +16,6 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
 int
 sched_spawn(taskfunc f, void *closure, struct scheduler *s)
 {
-    // Paramètre inutilisé
-    (void)s;
-
     pthread_t thread;
     int err;
 
