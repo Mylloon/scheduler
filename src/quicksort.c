@@ -1,5 +1,9 @@
 #include "../includes/quicksort.h"
+#include "../includes/sched.h"
 
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 
 int
