@@ -33,8 +33,8 @@ struct scheduler {
     /* Compteur des threads dormants */
     int nthsleep;
 
-    /* Stack sous forme de dequeu pour gérer la récupération
-     * du premier élément ajouté */
+    /* Deck permettant de récupérer aussi bien le premier élément ajouté
+     * que le dernier */
     int *top;
     int *bottom;
 };
