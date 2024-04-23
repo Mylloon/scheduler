@@ -12,8 +12,8 @@ struct task_info {
 };
 
 struct scheduler {
-    /* Taille des piles */
-    int qlen;
+    /* Dernier élément du deck (premier ajouter) */
+    int *bottom;
 
     /* Variable de conditions pour reveillé les threads au besoin */
     pthread_cond_t cond;
@@ -24,29 +24,27 @@ struct scheduler {
     /* Nombre de threads instanciés */
     int nthreads;
 
+    /* Compteur des threads dormants */
+    int nthsleep;
+
+    /* Taille des piles */
+    int qlen;
+
     /* Piles de tâches */
     struct task_info **tasks;
 
     /* Liste des threads */
     pthread_t *threads;
 
-    /* Compteur des threads dormants */
-    int nthsleep;
-
-    /* Deck permettant de récupérer aussi bien le premier élément ajouté
-     * que le dernier */
+    /* Premier élément du deck (dernier ajouter) */
     int *top;
-    int *bottom;
 };
-
-/* Ordonnanceur partagé */
-static struct scheduler sched;
 
 /* Lance une tâche de la pile */
 void *sched_worker(void *);
 
 /* Nettoie les opérations effectuées par l'initialisation de l'ordonnanceur */
-int sched_init_cleanup(int);
+int sched_init_cleanup(struct scheduler, int);
 
 /* Récupère l'index du thread courant */
 int current_thread(struct scheduler *);
@@ -54,6 +52,8 @@ int current_thread(struct scheduler *);
 int
 sched_init(int nthreads, int qlen, taskfunc f, void *closure)
 {
+    static struct scheduler sched;
+
     sched.tasks = NULL;
     sched.threads = NULL;
     sched.top = NULL;
@@ -78,23 +78,23 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
     // Initialisation du mutex
     if(pthread_mutex_init(&sched.mutex, NULL) != 0) {
         fprintf(stderr, "Can't init mutex\n");
-        return sched_init_cleanup(-1);
+        return sched_init_cleanup(sched, -1);
     }
 
     // Initialisation variable de condition
     if(pthread_cond_init(&sched.cond, NULL) != 0) {
         fprintf(stderr, "Can't init varcond\n");
-        return sched_init_cleanup(-1);
+        return sched_init_cleanup(sched, -1);
     }
 
     // Initialisation du curseur suivant l'état de la pile de chaque processus
     if(!(sched.top = malloc(nthreads * sizeof(int)))) {
         perror("Cursor top stack");
-        return sched_init_cleanup(-1);
+        return sched_init_cleanup(sched, -1);
     }
     if(!(sched.bottom = malloc(nthreads * sizeof(int)))) {
         perror("Cursor bottom stack");
-        return sched_init_cleanup(-1);
+        return sched_init_cleanup(sched, -1);
     }
     for(int i = 0; i < nthreads; ++i) {
         sched.top[i] = 0;
@@ -103,13 +103,13 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
 
     // Allocation mémoire pour la pile de chaque processus
     if(!(sched.tasks = malloc(nthreads * sizeof(struct task_info *)))) {
-        perror("Stack list");
-        return sched_init_cleanup(-1);
+        perror("Deck list");
+        return sched_init_cleanup(sched, -1);
     }
     for(int i = 0; i < nthreads; ++i) {
         if(!(sched.tasks[i] = malloc(qlen * sizeof(struct task_info)))) {
-            fprintf(stderr, "Stack for thread %d: %s\n", i, strerror(errno));
-            return sched_init_cleanup(-1);
+            fprintf(stderr, "Deck for thread %d: %s\n", i, strerror(errno));
+            return sched_init_cleanup(sched, -1);
         }
     }
 
@@ -119,13 +119,13 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
     // Créer les threads
     if(!(sched.threads = malloc(nthreads * sizeof(pthread_t)))) {
         perror("Threads");
-        return sched_init_cleanup(-1);
+        return sched_init_cleanup(sched, -1);
     }
 
     // Ajoute la tâche initiale
     if(sched_spawn(f, closure, &sched) < 0) {
         fprintf(stderr, "Can't create the initial task\n");
-        return sched_init_cleanup(-1);
+        return sched_init_cleanup(sched, -1);
     }
 
     // Démarre les threads
@@ -144,7 +144,7 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
                 fprintf(stderr, "\n");
             }
 
-            return sched_init_cleanup(-1);
+            return sched_init_cleanup(sched, -1);
         }
 
         pthread_mutex_lock(&sched.mutex);
@@ -155,45 +155,45 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
     for(int i = 0; i < nthreads; ++i) {
         if((pthread_join(sched.threads[i], NULL) != 0)) {
             fprintf(stderr, "Can't wait the thread %d\n", i);
-            return sched_init_cleanup(-1);
+            return sched_init_cleanup(sched, -1);
         }
     }
 
-    return sched_init_cleanup(1);
+    return sched_init_cleanup(sched, 1);
 }
 
 int
-sched_init_cleanup(int ret_code)
+sched_init_cleanup(struct scheduler s, int ret_code)
 {
-    pthread_mutex_destroy(&sched.mutex);
+    pthread_mutex_destroy(&s.mutex);
 
-    pthread_cond_destroy(&sched.cond);
+    pthread_cond_destroy(&s.cond);
 
-    if(sched.tasks) {
-        for(int i = 0; i < sched.nthreads; ++i) {
-            if(sched.tasks[i]) {
-                free(sched.tasks[i]);
-                sched.tasks[i] = NULL;
+    if(s.tasks) {
+        for(int i = 0; i < s.nthreads; ++i) {
+            if(s.tasks[i]) {
+                free(s.tasks[i]);
+                s.tasks[i] = NULL;
             }
         }
 
-        free(sched.tasks);
-        sched.tasks = NULL;
+        free(s.tasks);
+        s.tasks = NULL;
     }
 
-    if(sched.threads) {
-        free(sched.threads);
-        sched.threads = NULL;
+    if(s.threads) {
+        free(s.threads);
+        s.threads = NULL;
     }
 
-    if(sched.top) {
-        free(sched.top);
-        sched.top = NULL;
+    if(s.top) {
+        free(s.top);
+        s.top = NULL;
     }
 
-    if(sched.bottom) {
-        free(sched.bottom);
-        sched.bottom = NULL;
+    if(s.bottom) {
+        free(s.bottom);
+        s.bottom = NULL;
     }
 
     return ret_code;

@@ -14,9 +14,6 @@ struct scheduler {
     /* Indicateur de changement d'état */
     pthread_cond_t cond;
 
-    /* Taille de la pile */
-    int qlen;
-
     /* Mutex qui protège la structure */
     pthread_mutex_t mutex;
 
@@ -26,6 +23,9 @@ struct scheduler {
     /* Nombre de threads en attente */
     int nthsleep;
 
+    /* Taille de la pile */
+    int qlen;
+
     /* Pile de tâches */
     struct task_info *tasks;
 
@@ -33,15 +33,14 @@ struct scheduler {
     int top;
 };
 
-/* Ordonnanceur partagé */
-static struct scheduler sched;
-
 /* Lance une tâche de la pile */
 void *sched_worker(void *);
 
 int
 sched_init(int nthreads, int qlen, taskfunc f, void *closure)
 {
+    static struct scheduler sched;
+
     if(qlen <= 0) {
         fprintf(stderr, "qlen must be greater than 0\n");
         return -1;
@@ -56,6 +55,8 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
     }
     sched.nthreads = nthreads;
 
+    sched.nthsleep = 0;
+
     if(pthread_mutex_init(&sched.mutex, NULL) != 0) {
         fprintf(stderr, "Can't init mutex\n");
         return -1;
@@ -68,7 +69,7 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
 
     sched.top = -1;
     if((sched.tasks = malloc(qlen * sizeof(struct task_info))) == NULL) {
-        fprintf(stderr, "Can't allocate memory for stack\n");
+        perror("Stack");
         return -1;
     }
 
@@ -107,6 +108,9 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
 
     free(sched.tasks);
 
+    pthread_mutex_destroy(&sched.mutex);
+    pthread_cond_destroy(&sched.cond);
+
     return 1;
 }
 
@@ -122,7 +126,8 @@ sched_spawn(taskfunc f, void *closure, struct scheduler *s)
         return -1;
     }
 
-    s->tasks[++s->top] = (struct task_info){closure, f};
+    s->top++;
+    s->tasks[s->top] = (struct task_info){closure, f};
 
     pthread_cond_signal(&s->cond);
     pthread_mutex_unlock(&s->mutex);
@@ -135,6 +140,7 @@ sched_worker(void *arg)
 {
     struct scheduler *s = (struct scheduler *)arg;
 
+    struct task_info task;
     while(1) {
         pthread_mutex_lock(&s->mutex);
 
@@ -157,13 +163,12 @@ sched_worker(void *arg)
         }
 
         // Extrait la tâche de la pile
-        taskfunc f = s->tasks[s->top].f;
-        void *closure = s->tasks[s->top].closure;
+        task = s->tasks[s->top];
         s->top--;
         pthread_mutex_unlock(&s->mutex);
 
         // Exécute la tâche
-        f(closure, s);
+        task.f(task.closure, s);
     }
 
     return NULL;
