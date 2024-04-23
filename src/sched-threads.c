@@ -1,10 +1,9 @@
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+
 #include "../includes/sched.h"
 
 #include <pthread.h>
 #include <stdio.h>
-
-/* Routine d'un thread */
-void *sched_worker(void *);
 
 int
 sched_init(int nthreads, int qlen, taskfunc f, void *closure)
@@ -20,15 +19,15 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
 int
 sched_spawn(taskfunc f, void *closure, struct scheduler *s)
 {
-    // Paramètres inutilisés
-    (void)f;
-    (void)closure;
+    // Paramètre inutilisé
+    (void)s;
 
     pthread_t thread;
     int err;
 
     // Création d'un thread pour la tâche
-    if((err = pthread_create(&thread, NULL, sched_worker, &s)) != 0) {
+    if((err = pthread_create(&thread, NULL, (void *(*)(void *))f, closure)) !=
+       0) {
         fprintf(stderr, "pthread_create error %d\n", err);
         return -1;
     }
@@ -40,12 +39,4 @@ sched_spawn(taskfunc f, void *closure, struct scheduler *s)
     }
 
     return 0;
-}
-
-void *
-sched_worker(void *arg)
-{
-    (void)arg;
-
-    return NULL;
 }
