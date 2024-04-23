@@ -205,7 +205,7 @@ current_thread(struct scheduler *s)
     pthread_t current = pthread_self();
 
     pthread_mutex_lock(&s->mutex);
-    for(int i = 0; i < s->nthreads; i++) {
+    for(int i = 0; i < s->nthreads; ++i) {
         if(pthread_equal(s->threads[i], current)) {
             pthread_mutex_unlock(&s->mutex);
             return i;
