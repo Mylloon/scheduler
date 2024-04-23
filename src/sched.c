@@ -146,7 +146,10 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
 
             return sched_init_cleanup(-1);
         }
+
+        pthread_mutex_lock(&sched.mutex);
         sched.nthreads++;
+        pthread_mutex_unlock(&sched.mutex);
     }
 
     for(int i = 0; i < nthreads; ++i) {
@@ -200,11 +203,15 @@ int
 current_thread(struct scheduler *s)
 {
     pthread_t current = pthread_self();
+
+    pthread_mutex_lock(&s->mutex);
     for(int i = 0; i < s->nthreads; i++) {
         if(pthread_equal(s->threads[i], current)) {
+            pthread_mutex_unlock(&s->mutex);
             return i;
         }
     }
+    pthread_mutex_unlock(&s->mutex);
 
     return -1;
 }
