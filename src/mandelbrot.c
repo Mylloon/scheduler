@@ -12,12 +12,12 @@
 struct mandelbrot_args {
     unsigned int *image;
     double scale;
-    int dx, dy, width, height;
+    int x, y, dx, dy, width, height;
 };
 
 struct mandelbrot_args *
-new_mandelbrot_args(unsigned int *image, double scale, int dx, int dy,
-                    int width, int height)
+new_mandelbrot_args(unsigned int *image, double scale, int x, int y, int dx,
+                    int dy, int width, int height)
 {
     struct mandelbrot_args *args;
 
@@ -28,6 +28,8 @@ new_mandelbrot_args(unsigned int *image, double scale, int dx, int dy,
 
     args->image = image;
     args->scale = scale;
+    args->x = x;
+    args->y = y;
     args->dx = dx;
     args->dy = dy;
     args->width = width;
@@ -86,7 +88,7 @@ torgb(int n)
 }
 
 void
-draw(void *closure, struct scheduler *s)
+draw_pixel(void *closure, struct scheduler *s)
 {
     struct mandelbrot_args *args = (struct mandelbrot_args *)closure;
     unsigned int *image = args->image;
@@ -94,15 +96,38 @@ draw(void *closure, struct scheduler *s)
     int dx = args->dx;
     int dy = args->dy;
     int width = args->width;
+
+    (void)s; // pas de nouvelle tâche dans le scheduler
+
+    free(closure);
+
+    unsigned rgb = torgb(mandel(toc(dx, dy, dx, dy, scale)));
+
+    image[dy * width + dx] = rgb;
+}
+
+void
+draw(void *closure, struct scheduler *s)
+{
+    struct mandelbrot_args *args = (struct mandelbrot_args *)closure;
+    unsigned int *image = args->image;
+    double scale = args->scale;
+    int x = args->x;
+    int y = args->y;
+    int dx = args->dx;
+    int dy = args->dy;
+    int width = args->width;
     int height = args->height;
 
     free(closure);
 
-    for(int y = 0; y < height; y++) {
-        for(int x = 0; x < width; x++) {
-            /* TODO: Utiliser s */
-            unsigned rgb = torgb(mandel(toc(x, y, dx, dy, scale)));
-            image[y * width + x] = rgb;
+    for(; y < height; y++) {
+        for(; x < width; x++) {
+            int rc = sched_spawn(
+                draw_pixel,
+                new_mandelbrot_args(image, scale, x, y, dx, dy, width, height),
+                s);
+            assert(rc >= 0);
         }
     }
 }
@@ -126,8 +151,8 @@ benchmark_mandelbrot(int serial, int nthreads)
     struct timespec begin, end;
     double delay;
     int rc;
-    int width = 1920;
-    int height = 1080;
+    int width = 3840;
+    int height = 2160;
     double scale = width / 4.0;
     int dx = width / 2;
     int dy = height / 2;
@@ -144,7 +169,7 @@ benchmark_mandelbrot(int serial, int nthreads)
     } else {
         rc = sched_init(
             nthreads, width * height, draw,
-            new_mandelbrot_args(image, scale, dx, dy, width, height));
+            new_mandelbrot_args(image, scale, 0, 0, dx, dy, width, height));
         assert(rc >= 0);
     }
 
