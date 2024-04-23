@@ -20,9 +20,9 @@
 \makeatother
 
 % Code integration
-%\usepackage{minted}
-%\setminted[c]{autogobble,frame=lines}
-%\usemintedstyle{emacs}
+\usepackage{minted}
+\setminted[c]{autogobble,frame=lines}
+\usemintedstyle{emacs}
 
 \def\titleName{Projet : Un ordonnanceur par work stealing}
 \def\docTitle{\href{https://www.irif.fr/~jch/enseignement/systeme/projet.pdf}{\titleName}}
@@ -60,13 +60,15 @@
 Description des différents algorithmes implémentés.
 
 \subsection{Naïf}
-Cette implémentation naïve est celle fourni dans le fichier
-\texttt{quicksort.c} avec le mode \texttt{serial}.
+Cette implémentation naïve correspond au mode \texttt{serial}
+de \texttt{quicksort.c}. Elle lance les tâches sans threads.
 
-\subsection[Threads sans gestion]{%
-  Threads\footnote{processus léger} sans gestion}
+\subsection[Threads sans gestion]{Threads sans gestion}
 Cette implémentation correspond à simplement démarrer un nouveau thread
 pour chaque nouvelle tâche.
+
+Comme cette implémentation n'ordonnance rien et que le nombre de threads créer
+est important.
 
 \subsection{Threads avec pile}\label{desc:th_pile}
 Pour cette implémentation, on garde en mémoire une pile,
@@ -78,12 +80,21 @@ Même fonctionnement que dans l'algorithme de \docref{desc:th_pile}, sauf
 qu'au lieu de récupérer la dernière tâche, on récupère une tâche
 aléatoire de la pile.
 
-\subsection{Répartition par \coeurs}
-\dots
+\subsection{Répartition par work-stealing}
+\begin{itemize}
+  \item Au lieu d'avoir une pile unique, chaque thread à sa propre liste
+  \item Chaque tâche est ajouté sur le même thread de sa création.
+  \item Quand un thread n'as pas de tâches à faire, il vole une tâche à un autre
+        thread, en partant de la fin
+\end{itemize}
 
 \section{Statistiques}
 Chaque implémentation a été testée avec l'optimisation de niveau 2
-de \texttt{gcc}, parfois sur 2 machines. %TODO:parfois?
+de \texttt{gcc}, sur 2 machines.
+
+Le programme utilisé pour tester les implémentations est le \texttt{quicksort}
+fourni.
+
 
 \def\mone{\textit{Machine 1}} % fixe
 \def\mtwo{\textit{Machine 2}} % portable
@@ -114,7 +125,13 @@ Ce programme ne bénéficie pas de toute la puissance de la machine.
 La création des threads pour chaque tâche créer un énorme
 goulot d'étranglement qui réduit de grandement les performances.
 
-\subsection{Threads avec pile}
+Le temps d'exécution étant long, nous pouvons voir les threads via la commande
+\texttt{top} : \mintinline{bash}|top -Hp $(pgrep ordonnanceur)|.
+
+Pour augmenter les performances, il faut avoir une taille fixe de threads créer,
+et donc il faut gérer les tâches et décider de quelle tâche va sur quel thread.
+
+\subsection{Threads avec pile}\label{stats:stack}
 \begin{description}
   \item[\mone] Le programme a été lancé \textbf{100 fois}.
         Le temps moyen d'exécution a été de \textbf{0,258 secs}
@@ -122,7 +139,7 @@ goulot d'étranglement qui réduit de grandement les performances.
         Le temps moyen d'exécution a été de \textbf{\dots secs}
 \end{description}
 
-Le lancement de nouveau thread étant limité par machine, les performances
+Le lancement de nouveau thread étant limité, les performances
 sont grandement améliorées par rapport aux tests de \docref{stats:th_ges}.
 
 Également grâce au fait que désormais on utilise les \coeurs~de notre CPU,
@@ -137,9 +154,13 @@ les performances sont aussi améliorées par rapport aux tests de
         Le temps moyen d'exécution a été de \textbf{\dots secs}
 \end{description}
 
-\dots
+Cette implémentation est identique à \docref{stats:stack}, à l'exception que
+l'on récupère une tâche aléatoire de la pile au lieu d'y prendre la dernière
+ajouté.
 
-\subsection{Répartition par \coeurs}
+Cette façon de faire réduit les performances.
+
+\subsection{Répartition par work-stealing}
 \begin{description}
   \item[\mone] Le programme a été lancé \textbf{100 fois}.
         Le temps moyen d'exécution a été de \textbf{0,229 secs}
@@ -147,6 +168,7 @@ les performances sont aussi améliorées par rapport aux tests de
         Le temps moyen d'exécution a été de \textbf{\dots secs}
 \end{description}
 
-\dots
+Dans cet implémentation, on n'utilises plus une pile mais un deck de tâches.
+Cette façon de faire est légèrement meilleur que \docref{desc:th_pile}.
 
 \end{document}
