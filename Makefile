@@ -6,11 +6,16 @@ MKDIR = mkdir -p
 
 SRC_DIR = src
 INC_DIR = includes
-SOURCES = $(wildcard $(SRC_DIR)/*.c)
-OBJETS  = $(patsubst %.c,%.o,$(notdir $(SOURCES)))
+
+SOURCES         = $(wildcard $(SRC_DIR)/*.c)
+SOURCES_NOSCHED = $(filter-out $(wildcard $(SRC_DIR)/sched-*.c), $(SOURCES))
+
+ALL_OBJECTS = $(patsubst %.c,%.o,$(notdir $(SOURCES)))
+OBJECTS     = $(patsubst %.c,%.o,$(notdir $(SOURCES_NOSCHED)))
 
 CFLAGS  = -std=gnu11 -pedantic
 LDFLAGS =
+SCHED   = sched-ws.o
 
 EXE     = ordonnanceur
 EXE_EXT = .elf
@@ -22,7 +27,7 @@ PDF_NEWNAME  = Rapport de projet
 %.o: src/%.c
 	$(CC) -c $< -o $@ $(CFLAGS)
 
-release: CFLAGS += -O2
+release: CFLAGS  += -O2
 release: compilation
 
 debug: CFLAGS  += -Wall -Wextra -Wshadow -Wcast-align -Wstrict-prototypes
@@ -30,11 +35,24 @@ debug: CFLAGS  += -fanalyzer -fsanitize=undefined -g -Og
 debug: LDFLAGS += -fsanitize=undefined
 debug: compilation
 
-compilation: $(OBJETS)
-	$(CC) -o $(EXE)$(EXE_EXT) $(OBJETS) $(LDFLAGS)
+compilation: $(ALL_OBJECTS)
+	$(CC) -o $(EXE)$(EXE_EXT) $(OBJECTS) $(SCHED) $(LDFLAGS)
 
 all:
 	release
+
+# Specific schedulers
+threads: SCHED = sched-threads.o
+threads: release
+
+stack: SCHED = sched-stack.o
+stack: release
+
+random: SCHED = sched-random.o
+random: release
+
+ws: SCHED = sched-ws.o
+ws: release
 
 pdf-make:
 	cd report && \
@@ -45,7 +63,7 @@ pdf-clean:
 	$(MAKE) clean
 
 clean: pdf-clean
-	$(RM) $(OBJETS) "$(EXE)$(EXE_EXT)" "$(ARCHIVE_NAME).tar"
+	$(RM) *.o "$(EXE)$(EXE_EXT)" "$(ARCHIVE_NAME).tar"
 
 archive: pdf-make
 	$(MKDIR) "$(ARCHIVE_NAME)"

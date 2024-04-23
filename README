@@ -1,20 +1,34 @@
 Projet de programmation système avancée
 =======================================
 
-Compilation optimisée
----------------------
+Compilation optimisée avec ordonnanceur *work-stealing*
+-------------------------------------------------------
 
   make
 
 Ce qui créer l'exécutable `ordonnanceur.elf`.
+
 
 Lancement utilisant tous les cœurs disponibles :
 ------------------------------------------------
 
   ./ordonnanceur.elf -t 0
 
-Info
-----
+
+Autres options
+--------------
+
+Il est possible d'utiliser d'autres implémentations d'ordonnanceur en changeant
+la cible du Makefile.
+
+- `make threads` : lance juste des threads
+- `make stack`   : utilisation d'une pile
+- `make random`  : idem que stack mais en prenant une tâche aléatoire
+- `make ws`      : work-stealing
+
+
+Infos
+-----
 
 Le rapport se trouve dans le dossier courant.
 
