@@ -63,7 +63,7 @@ pdf-clean:
 	$(MAKE) clean
 
 clean: pdf-clean
-	$(RM) *.o "$(EXE)$(EXE_EXT)" "$(ARCHIVE_NAME).tar"
+	$(RM) $(ALL_OBJECTS) "$(EXE)$(EXE_EXT)" "$(ARCHIVE_NAME).tar"
 
 archive: pdf-make
 	$(MKDIR) "$(ARCHIVE_NAME)"
