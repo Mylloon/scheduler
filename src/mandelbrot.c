@@ -1,4 +1,5 @@
 #include "../includes/mandelbrot.h"
+#include "../includes/images_io.h"
 #include "../includes/sched.h"
 
 #include <assert.h>
@@ -151,8 +152,8 @@ benchmark_mandelbrot(int serial, int nthreads)
     struct timespec begin, end;
     double delay;
     int rc;
-    int width = 3840;
-    int height = 2160;
+    int width = 1280;
+    int height = 720;
     double scale = width / 4.0;
     int dx = width / 2;
     int dy = height / 2;
@@ -177,6 +178,7 @@ benchmark_mandelbrot(int serial, int nthreads)
     delay = end.tv_sec + end.tv_nsec / 1000000000.0 -
             (begin.tv_sec + begin.tv_nsec / 1000000000.0);
 
+    imageSaveBMP("mandelbrot.bmp", (unsigned char *)image, width, height, 3, 8);
     free(image);
     return delay;
 }
