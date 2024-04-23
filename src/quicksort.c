@@ -93,43 +93,14 @@ quicksort(void *closure, struct scheduler *s)
     assert(rc >= 0);
 }
 
-int
-benchmark(int argc, char **argv)
+double
+benchmark_quicksort(int serial, int nthreads)
 {
     int *a;
     struct timespec begin, end;
     double delay;
     int rc;
     int n = 10 * 1024 * 1024;
-    int nthreads = -1;
-    int serial = 0;
-
-    while(1) {
-        int opt = getopt(argc, argv, "sn:t:");
-        if(opt < 0) {
-            break;
-        }
-        switch(opt) {
-        case 's':
-            serial = 1;
-            break;
-        case 'n':
-            n = atoi(optarg);
-            break;
-        case 't':
-            nthreads = atoi(optarg);
-            break;
-        default:
-            goto usage;
-        }
-    }
-
-    if(n <= 0) {
-        goto usage;
-    }
-    if(nthreads < 0 && !serial) {
-        goto usage;
-    }
 
     a = malloc(n * sizeof(int));
 
@@ -152,16 +123,11 @@ benchmark(int argc, char **argv)
     clock_gettime(CLOCK_MONOTONIC, &end);
     delay = end.tv_sec + end.tv_nsec / 1000000000.0 -
             (begin.tv_sec + begin.tv_nsec / 1000000000.0);
-    printf("Done in %lf seconds.\n", delay);
 
     for(int i = 0; i < n - 1; i++) {
         assert(a[i] <= a[i + 1]);
     }
 
     free(a);
-    return 0;
-
-usage:
-    printf("quicksort [-n size] [-t threads] [-s]\n");
-    return 1;
+    return delay;
 }

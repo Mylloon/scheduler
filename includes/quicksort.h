@@ -1,3 +1,6 @@
 #pragma once
 
-int benchmark(int argc, char **argv);
+/* Lance le benchmark avec quicksort (fournis)
+ *
+ * Renvoie le temps d'exécution */
+double benchmark_quicksort(int, int);
