@@ -10,6 +10,7 @@
 #define WIDTH 3840
 #define HEIGHT 2160
 #define ITERATIONS 1000
+#define CHUNK_SIZE 32
 
 #define SCALE (WIDTH / 4.0)
 #define DX (WIDTH / 2)
@@ -17,11 +18,12 @@
 
 struct mandelbrot_args {
     unsigned int *image;
-    int x, y;
+    int start_x, start_y, end_x, end_y;
 };
 
 struct mandelbrot_args *
-new_mandelbrot_args(unsigned int *image, int x, int y)
+new_mandelbrot_args(unsigned int *image, int start_x, int start_y, int end_x,
+                    int end_y)
 {
     struct mandelbrot_args *args;
 
@@ -31,8 +33,10 @@ new_mandelbrot_args(unsigned int *image, int x, int y)
     }
 
     args->image = image;
-    args->x = x;
-    args->y = y;
+    args->start_x = start_x;
+    args->start_y = start_y;
+    args->end_x = end_x;
+    args->end_y = end_y;
 
     return args;
 }
@@ -94,34 +98,40 @@ pixel(unsigned int *image, int x, int y)
 }
 
 void
-draw_pixel(void *closure, struct scheduler *s)
-{
-    struct mandelbrot_args *args = (struct mandelbrot_args *)closure;
-    unsigned int *image = args->image;
-    int x = args->x;
-    int y = args->y;
-
-    free(closure);
-
-    (void)s; // pas de nouvelle tâche dans le scheduler
-
-    pixel(image, x, y);
-}
-
-void
 draw(void *closure, struct scheduler *s)
 {
     struct mandelbrot_args *args = (struct mandelbrot_args *)closure;
     unsigned int *image = args->image;
+    unsigned int start_x = args->start_x;
+    unsigned int start_y = args->start_y;
+    unsigned int end_x = args->end_x;
+    unsigned int end_y = args->end_y;
 
     free(closure);
 
-    for(int y = 0; y < HEIGHT; y++) {
-        for(int x = 0; x < WIDTH; x++) {
-            int rc =
-                sched_spawn(draw_pixel, new_mandelbrot_args(image, x, y), s);
-            assert(rc >= 0);
+    if((end_x - start_x) < CHUNK_SIZE && (end_y - start_y) < CHUNK_SIZE) {
+        // Si le morceau est petit alors on dessine
+        for(int y = start_y; y < end_y; y++) {
+            for(int x = start_x; x < end_x; x++) {
+                pixel(image, x, y);
+            }
         }
+    } else {
+        // Sinon on recoupe le morceau
+        int mid_x = (start_x + end_x) / 2;
+        int mid_y = (start_y + end_y) / 2;
+
+        int rc1 = sched_spawn(
+            draw, new_mandelbrot_args(image, start_x, start_y, mid_x, mid_y),
+            s);
+        int rc2 = sched_spawn(
+            draw, new_mandelbrot_args(image, mid_x, start_y, end_x, mid_y), s);
+        int rc3 = sched_spawn(
+            draw, new_mandelbrot_args(image, start_x, mid_y, mid_x, end_y), s);
+        int rc4 = sched_spawn(
+            draw, new_mandelbrot_args(image, mid_x, mid_y, end_x, end_y), s);
+
+        assert(rc1 >= 0 && rc2 >= 0 && rc3 >= 0 && rc4 >= 0);
     }
 }
 
@@ -154,7 +164,8 @@ benchmark_mandelbrot(int serial, int nthreads)
     if(serial) {
         draw_serial(image);
     } else {
-        rc = sched_init(nthreads, size, draw, new_mandelbrot_args(image, 0, 0));
+        rc = sched_init(nthreads, size, draw,
+                        new_mandelbrot_args(image, 0, 0, WIDTH, HEIGHT));
         assert(rc >= 0);
     }
 
