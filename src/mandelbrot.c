@@ -10,7 +10,7 @@
 #define WIDTH 3840
 #define HEIGHT 2160
 #define ITERATIONS 1000
-#define CHUNK_SIZE 32
+#define CHUNK_SIZE 8
 
 #define SCALE (WIDTH / 4.0)
 #define DX (WIDTH / 2)
