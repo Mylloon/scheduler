@@ -10,11 +10,11 @@ Ce qui créer l'exécutable `ordonnanceur.elf`.
 
 Paramètres disponibles :
 
-- `-q` lance le benchmark avec quicksort
-- `-m` lance le benchmark avec mandelbrot
-- `-t n` où `n` est le nombre de threads à utiliser, 0 signifie qu'on utilise
-  tous les cœurs disponibles.
-- `-s` n'utilises pas d'ordonnanceur
+* -q   : lance le benchmark avec quicksort
+* -m   : lance le benchmark avec mandelbrot
+* -t n : où `n` est le nombre de threads à utiliser, 0 signifie qu'on utilise
+         tous les cœurs disponibles.
+* -s   : n'utilises pas d'ordonnanceur
 
 Exemple : quicksort en utilisant tous les cœurs disponibles
 
@@ -27,10 +27,10 @@ Cible du makefile
 Il est possible d'utiliser d'autres implémentations d'ordonnanceur en changeant
 la cible du Makefile.
 
-- `make threads` : lance juste des threads
-- `make lifo`    : utilisation d'une pile
-- `make random`  : idem que `lifo` mais en prenant une tâche aléatoire
-- `make ws`      : work-stealing
+* `make threads` : lance juste des threads
+* `make lifo`    : utilisation d'une pile
+* `make random`  : idem que `lifo` mais en prenant une tâche aléatoire
+* `make ws`      : work-stealing
 
 
 Infos

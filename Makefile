@@ -32,7 +32,7 @@ release: compilation
 
 debug: CFLAGS  += -Wall -Wextra -Wshadow -Wcast-align -Wstrict-prototypes
 debug: CFLAGS  += -fanalyzer -fsanitize=undefined -g -Og
-debug: LDFLAGS += -fsanitize=undefined -fsanitize=leak
+debug: LDFLAGS += -fsanitize=undefined -fsanitize=thread
 debug: compilation
 
 compilation: $(ALL_OBJECTS)
