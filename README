@@ -8,23 +8,29 @@ Compilation optimisée avec ordonnanceur *work-stealing*
 
 Ce qui créer l'exécutable `ordonnanceur.elf`.
 
+Paramètres disponibles :
 
-Lancement utilisant tous les cœurs disponibles :
-------------------------------------------------
+* -q   : lance le benchmark avec quicksort
+* -m   : lance le benchmark avec mandelbrot
+* -t n : où `n` est le nombre de threads à utiliser, 0 signifie qu'on utilise
+         tous les cœurs disponibles.
+* -s   : n'utilises pas d'ordonnanceur
 
-  ./ordonnanceur.elf -t 0
+Exemple : quicksort en utilisant tous les cœurs disponibles
+
+  ./ordonnanceur.elf -qt 0
 
 
-Autres options
+Cible du makefile
 --------------
 
 Il est possible d'utiliser d'autres implémentations d'ordonnanceur en changeant
 la cible du Makefile.
 
-- `make threads` : lance juste des threads
-- `make stack`   : utilisation d'une pile
-- `make random`  : idem que stack mais en prenant une tâche aléatoire
-- `make ws`      : work-stealing
+* `make threads` : lance juste des threads
+* `make lifo`    : utilisation d'une pile
+* `make random`  : idem que `lifo` mais en prenant une tâche aléatoire
+* `make ws`      : work-stealing
 
 
 Infos

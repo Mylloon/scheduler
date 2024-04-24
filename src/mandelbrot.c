@@ -11,7 +11,7 @@
 #define WIDTH 3840
 #define HEIGHT 2160
 #define ITERATIONS 1000
-#define CHUNK_SIZE 32
+#define CHUNK_SIZE 8
 
 #define SCALE (WIDTH / 4.0)
 #define DX (WIDTH / 2)
@@ -103,10 +103,10 @@ draw(void *closure, struct scheduler *s)
 {
     struct mandelbrot_args *args = (struct mandelbrot_args *)closure;
     unsigned int *image = args->image;
-    unsigned int start_x = args->start_x;
-    unsigned int start_y = args->start_y;
-    unsigned int end_x = args->end_x;
-    unsigned int end_y = args->end_y;
+    int start_x = args->start_x;
+    int start_y = args->start_y;
+    int end_x = args->end_x;
+    int end_y = args->end_y;
 
     free(closure);
 
@@ -174,7 +174,9 @@ benchmark_mandelbrot(int serial, int nthreads)
     delay = end.tv_sec + end.tv_nsec / 1000000000.0 -
             (begin.tv_sec + begin.tv_nsec / 1000000000.0);
 
+    // Sauvegarde l'image pour voir si ça fonctionne correctement
     imageSaveBMP("mandelbrot.bmp", (unsigned char *)image, WIDTH, HEIGHT, 3, 8);
+
     free(image);
     return delay;
 }
