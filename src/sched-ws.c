@@ -12,7 +12,7 @@ struct task_info {
 };
 
 struct scheduler {
-    /* Dernier élément du deck (premier ajouter) */
+    /* Dernier élément du deque (premier ajouter) */
     int *bottom;
 
     /* Variable de conditions pour reveillé les threads au besoin */
@@ -36,7 +36,7 @@ struct scheduler {
     /* Liste des threads */
     pthread_t *threads;
 
-    /* Premier élément du deck (dernier ajouter) */
+    /* Premier élément du deque (dernier ajouter) */
     int *top;
 };
 
@@ -103,12 +103,12 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
 
     // Allocation mémoire pour la pile de chaque processus
     if(!(sched.tasks = malloc(nthreads * sizeof(struct task_info *)))) {
-        perror("Deck list");
+        perror("Deque list");
         return sched_init_cleanup(sched, -1);
     }
     for(int i = 0; i < nthreads; ++i) {
         if(!(sched.tasks[i] = malloc(qlen * sizeof(struct task_info)))) {
-            fprintf(stderr, "Deck for thread %d: %s\n", i, strerror(errno));
+            fprintf(stderr, "Deque for thread %d: %s\n", i, strerror(errno));
             return sched_init_cleanup(sched, -1);
         }
     }
