@@ -111,8 +111,8 @@ draw(void *closure, struct scheduler *s)
 
     if((end_x - start_x) < CHUNK_SIZE && (end_y - start_y) < CHUNK_SIZE) {
         // Si le morceau est petit alors on dessine
-        for(int y = start_y; y < end_y; y++) {
-            for(int x = start_x; x < end_x; x++) {
+        for(unsigned int y = start_y; y < end_y; y++) {
+            for(unsigned int x = start_x; x < end_x; x++) {
                 pixel(image, x, y);
             }
         }
