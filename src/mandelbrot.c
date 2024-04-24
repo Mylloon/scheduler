@@ -89,26 +89,15 @@ torgb(int n)
 }
 
 void
-draw_pixel(void *closure, struct scheduler *s)
+pixel(unsigned int *image, double scale, int x, int y, int dx, int dy,
+      int width)
 {
-    struct mandelbrot_args *args = (struct mandelbrot_args *)closure;
-    unsigned int *image = args->image;
-    double scale = args->scale;
-    int dx = args->dx;
-    int dy = args->dy;
-    int width = args->width;
-
-    (void)s; // pas de nouvelle tâche dans le scheduler
-
-    free(closure);
-
-    unsigned rgb = torgb(mandel(toc(dx, dy, dx, dy, scale)));
-
-    image[dy * width + dx] = rgb;
+    unsigned rgb = torgb(mandel(toc(x, y, dx, dy, scale)));
+    image[y * width + x] = rgb;
 }
 
 void
-draw(void *closure, struct scheduler *s)
+draw_pixel(void *closure, struct scheduler *s)
 {
     struct mandelbrot_args *args = (struct mandelbrot_args *)closure;
     unsigned int *image = args->image;
@@ -118,12 +107,29 @@ draw(void *closure, struct scheduler *s)
     int dx = args->dx;
     int dy = args->dy;
     int width = args->width;
+
+    (void)s; // pas de nouvelle tâche dans le scheduler
+
+    free(closure);
+
+    pixel(image, scale, x, y, dx, dy, width);
+}
+
+void
+draw(void *closure, struct scheduler *s)
+{
+    struct mandelbrot_args *args = (struct mandelbrot_args *)closure;
+    unsigned int *image = args->image;
+    double scale = args->scale;
+    int dx = args->dx;
+    int dy = args->dy;
+    int width = args->width;
     int height = args->height;
 
     free(closure);
 
-    for(; y < height; y++) {
-        for(; x < width; x++) {
+    for(int y = 0; y < height; y++) {
+        for(int x = 0; x < width; x++) {
             int rc = sched_spawn(
                 draw_pixel,
                 new_mandelbrot_args(image, scale, x, y, dx, dy, width, height),
@@ -139,8 +145,7 @@ draw_serial(unsigned int *image, double scale, int dx, int dy, int width,
 {
     for(int y = 0; y < height; y++) {
         for(int x = 0; x < width; x++) {
-            unsigned rgb = torgb(mandel(toc(x, y, dx, dy, scale)));
-            image[y * width + x] = rgb;
+            pixel(image, scale, x, y, dx, dy, width);
         }
     }
 }
@@ -152,8 +157,8 @@ benchmark_mandelbrot(int serial, int nthreads)
     struct timespec begin, end;
     double delay;
     int rc;
-    int width = 1280;
-    int height = 720;
+    int width = 3840;
+    int height = 2160;
     double scale = width / 4.0;
     int dx = width / 2;
     int dy = height / 2;
