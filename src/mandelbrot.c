@@ -102,9 +102,9 @@ draw_pixel(void *closure, struct scheduler *s)
     int x = args->x;
     int y = args->y;
 
-    (void)s; // pas de nouvelle tâche dans le scheduler
-
     free(closure);
+
+    (void)s; // pas de nouvelle tâche dans le scheduler
 
     pixel(image, x, y);
 }
