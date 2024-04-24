@@ -56,6 +56,9 @@
 \tableofcontents
 \clearpage
 
+% TODO: Mandelbrot
+% TODO: Computer 2
+
 \section{Descriptions}
 Description des différents algorithmes implémentés.
 
@@ -82,10 +85,10 @@ aléatoire de la pile.
 
 \subsection{Répartition par work-stealing}
 \begin{itemize}
-  \item Au lieu d'avoir une pile unique, chaque thread à sa propre liste
-  \item Chaque tâche est ajouté sur le même thread de sa création.
-  \item Quand un thread n'as pas de tâches à faire, il vole une tâche à un autre
-        thread, en partant de la fin
+      \item Au lieu d'avoir une pile unique, chaque thread à sa propre liste
+      \item Chaque tâche est ajouté sur le même thread de sa création.
+      \item Quand un thread n'as pas de tâches à faire, il vole une tâche à un autre
+            thread, en partant de la fin
 \end{itemize}
 
 \section{Statistiques}
@@ -100,26 +103,26 @@ fourni.
 \def\mtwo{\textit{Machine 2}} % portable
 
 \begin{enumerate}
-  \item \textbf{12 \coeurs} pour la \mone.
-  \item \textbf{8 \coeurs} pour la \mtwo.
+      \item \textbf{12 \coeurs} pour la \mone.
+      \item \textbf{8 \coeurs} pour la \mtwo.
 \end{enumerate}
 
 \subsection{Naïf}\label{stats:naive}
 \begin{description}
-  \item[\mone] Le programme a été lancé \textbf{100 fois}.
-        Le temps moyen d'exécution a été de \textbf{0,855 secs}
-  \item[\mtwo] Le programme a été lancé \textbf{\dots fois}.
-        Le temps moyen d'exécution a été de \textbf{\dots secs}
+      \item[\mone] Le programme a été lancé \textbf{100 fois}.
+            Le temps moyen d'exécution a été de \textbf{0,855 secs}
+      \item[\mtwo] Le programme a été lancé \textbf{\dots fois}.
+            Le temps moyen d'exécution a été de \textbf{\dots secs}
 \end{description}
 
 Ce programme ne bénéficie pas de toute la puissance de la machine.
 
 \subsection{Threads sans gestion}\label{stats:th_ges}
 \begin{description}
-  \item[\mone] Le programme a été lancé \textbf{10 fois}.
-        Le temps moyen d'exécution a été de \textbf{35,985 secs}
-  \item[\mtwo] Le programme a été lancé \textbf{\dots fois}.
-        Le temps moyen d'exécution a été de \textbf{\dots secs}
+      \item[\mone] Le programme a été lancé \textbf{10 fois}.
+            Le temps moyen d'exécution a été de \textbf{35,985 secs}
+      \item[\mtwo] Le programme a été lancé \textbf{\dots fois}.
+            Le temps moyen d'exécution a été de \textbf{\dots secs}
 \end{description}
 
 La création des threads pour chaque tâche créer un énorme
@@ -133,10 +136,10 @@ et donc il faut gérer les tâches et décider de quelle tâche va sur quel thre
 
 \subsection{Threads avec pile}\label{stats:stack}
 \begin{description}
-  \item[\mone] Le programme a été lancé \textbf{100 fois}.
-        Le temps moyen d'exécution a été de \textbf{0,258 secs}
-  \item[\mtwo] Le programme a été lancé \textbf{\dots fois}.
-        Le temps moyen d'exécution a été de \textbf{\dots secs}
+      \item[\mone] Le programme a été lancé \textbf{100 fois}.
+            Le temps moyen d'exécution a été de \textbf{0,258 secs}
+      \item[\mtwo] Le programme a été lancé \textbf{\dots fois}.
+            Le temps moyen d'exécution a été de \textbf{\dots secs}
 \end{description}
 
 Le lancement de nouveau thread étant limité, les performances
@@ -148,10 +151,10 @@ les performances sont aussi améliorées par rapport aux tests de
 
 \subsubsection{Sélection aléatoire de tâche}
 \begin{description}
-  \item[\mone] Le programme a été lancé \textbf{100 fois}.
-        Le temps moyen d'exécution a été de \textbf{0,390 secs}
-  \item[\mtwo] Le programme a été lancé \textbf{\dots fois}.
-        Le temps moyen d'exécution a été de \textbf{\dots secs}
+      \item[\mone] Le programme a été lancé \textbf{100 fois}.
+            Le temps moyen d'exécution a été de \textbf{0,390 secs}
+      \item[\mtwo] Le programme a été lancé \textbf{\dots fois}.
+            Le temps moyen d'exécution a été de \textbf{\dots secs}
 \end{description}
 
 Cette implémentation est identique à \docref{stats:stack}, à l'exception que
@@ -162,10 +165,10 @@ Cette façon de faire réduit les performances.
 
 \subsection{Répartition par work-stealing}
 \begin{description}
-  \item[\mone] Le programme a été lancé \textbf{100 fois}.
-        Le temps moyen d'exécution a été de \textbf{0,229 secs}
-  \item[\mtwo] Le programme a été lancé \textbf{\dots fois}.
-        Le temps moyen d'exécution a été de \textbf{\dots secs}
+      \item[\mone] Le programme a été lancé \textbf{100 fois}.
+            Le temps moyen d'exécution a été de \textbf{0,229 secs}
+      \item[\mtwo] Le programme a été lancé \textbf{\dots fois}.
+            Le temps moyen d'exécution a été de \textbf{\dots secs}
 \end{description}
 
 Dans cet implémentation, on n'utilises plus une pile mais un deck de tâches.
