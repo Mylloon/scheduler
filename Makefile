@@ -45,8 +45,8 @@ all:
 threads: SCHED = sched-threads.o
 threads: release
 
-stack: SCHED = sched-stack.o
-stack: release
+lifo: SCHED = sched-lifo.o
+lifo: release
 
 random: SCHED = sched-random.o
 random: release
