@@ -50,9 +50,9 @@ mandel(double complex c)
 }
 
 double complex
-toc(int x, int y, int dx, int dy, double scale)
+toc(int x, int y)
 {
-    return ((x - dx) + I * (y - dy)) / scale;
+    return ((x - (int)DX) + I * (y - (int)DY)) / SCALE;
 }
 
 unsigned int
@@ -87,11 +87,10 @@ torgb(int n)
 }
 
 void
-pixel(unsigned int *image, double scale, int x, int y, int dx, int dy,
-      int width)
+pixel(unsigned int *image, int x, int y)
 {
-    unsigned rgb = torgb(mandel(toc(x, y, dx, dy, scale)));
-    image[y * width + x] = rgb;
+    unsigned rgb = torgb(mandel(toc(x, y)));
+    image[y * WIDTH + x] = rgb;
 }
 
 void
@@ -102,11 +101,11 @@ draw_pixel(void *closure, struct scheduler *s)
     int x = args->x;
     int y = args->y;
 
-    (void)s; // pas de nouvelle tâche dans le scheduler
-
     free(closure);
 
-    pixel(image, SCALE, x, y, DX, DY, WIDTH);
+    (void)s; // pas de nouvelle tâche dans le scheduler
+
+    pixel(image, x, y);
 }
 
 void
@@ -117,8 +116,8 @@ draw(void *closure, struct scheduler *s)
 
     free(closure);
 
-    for(int y = args->y; y < HEIGHT; y++) {
-        for(int x = args->x; x < WIDTH; x++) {
+    for(int y = 0; y < HEIGHT; y++) {
+        for(int x = 0; x < WIDTH; x++) {
             int rc =
                 sched_spawn(draw_pixel, new_mandelbrot_args(image, x, y), s);
             assert(rc >= 0);
@@ -131,7 +130,7 @@ draw_serial(unsigned int *image)
 {
     for(int y = 0; y < HEIGHT; y++) {
         for(int x = 0; x < WIDTH; x++) {
-            pixel(image, SCALE, x, y, DX, DY, WIDTH);
+            pixel(image, x, y);
         }
     }
 }
