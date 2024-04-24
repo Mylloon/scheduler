@@ -102,17 +102,17 @@ draw(void *closure, struct scheduler *s)
 {
     struct mandelbrot_args *args = (struct mandelbrot_args *)closure;
     unsigned int *image = args->image;
-    unsigned int start_x = args->start_x;
-    unsigned int start_y = args->start_y;
-    unsigned int end_x = args->end_x;
-    unsigned int end_y = args->end_y;
+    int start_x = args->start_x;
+    int start_y = args->start_y;
+    int end_x = args->end_x;
+    int end_y = args->end_y;
 
     free(closure);
 
     if((end_x - start_x) < CHUNK_SIZE && (end_y - start_y) < CHUNK_SIZE) {
         // Si le morceau est petit alors on dessine
-        for(unsigned int y = start_y; y < end_y; y++) {
-            for(unsigned int x = start_x; x < end_x; x++) {
+        for(int y = start_y; y < end_y; y++) {
+            for(int x = start_x; x < end_x; x++) {
                 pixel(image, x, y);
             }
         }
