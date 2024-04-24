@@ -2,6 +2,7 @@
 #include "../includes/quicksort.h"
 
 #include <assert.h>
+#include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -52,7 +53,8 @@ main(int argc, char *argv[])
     }
 
     assert(delay >= 0.0);
-    printf("Done in %lf seconds.\n", delay);
+    setlocale(LC_NUMERIC, "fr_FR.UTF-8");
+    printf("%lf\n", delay);
 
     return 0;
 
