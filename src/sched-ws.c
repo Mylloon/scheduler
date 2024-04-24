@@ -12,7 +12,7 @@ struct task_info {
 };
 
 struct scheduler {
-    /* Dernier élément du deque (premier ajouter) */
+    /* Premier élément du deque (dernier ajouter) */
     int *bottom;
 
     /* Variable de conditions pour reveillé les threads au besoin */
@@ -36,7 +36,7 @@ struct scheduler {
     /* Liste des threads */
     pthread_t *threads;
 
-    /* Premier élément du deque (dernier ajouter) */
+    /* Dernier élément du deque (premier ajouter) */
     int *top;
 };
 
@@ -54,10 +54,10 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
 {
     static struct scheduler sched;
 
+    sched.bottom = NULL;
     sched.tasks = NULL;
     sched.threads = NULL;
     sched.top = NULL;
-    sched.bottom = NULL;
 
     if(qlen <= 0) {
         fprintf(stderr, "qlen must be greater than 0\n");
@@ -88,17 +88,17 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
     }
 
     // Initialisation du curseur suivant l'état de la pile de chaque processus
-    if(!(sched.top = malloc(nthreads * sizeof(int)))) {
-        perror("Cursor top stack");
-        return sched_init_cleanup(sched, -1);
-    }
     if(!(sched.bottom = malloc(nthreads * sizeof(int)))) {
         perror("Cursor bottom stack");
         return sched_init_cleanup(sched, -1);
     }
+    if(!(sched.top = malloc(nthreads * sizeof(int)))) {
+        perror("Cursor top stack");
+        return sched_init_cleanup(sched, -1);
+    }
     for(int i = 0; i < nthreads; ++i) {
-        sched.top[i] = 0;
         sched.bottom[i] = 0;
+        sched.top[i] = 0;
     }
 
     // Allocation mémoire pour la pile de chaque processus
@@ -186,14 +186,14 @@ sched_init_cleanup(struct scheduler s, int ret_code)
         s.threads = NULL;
     }
 
-    if(s.top) {
-        free(s.top);
-        s.top = NULL;
-    }
-
     if(s.bottom) {
         free(s.bottom);
         s.bottom = NULL;
+    }
+
+    if(s.top) {
+        free(s.top);
+        s.top = NULL;
     }
 
     return ret_code;
@@ -226,16 +226,16 @@ sched_spawn(taskfunc f, void *closure, struct scheduler *s)
 
     pthread_mutex_lock(&s->mutex);
 
-    int next = (s->top[th] + 1) % s->qlen;
-    if(next == s->bottom[th]) {
+    int next = (s->bottom[th] + 1) % s->qlen;
+    if(next == s->top[th]) {
         pthread_mutex_unlock(&s->mutex);
         fprintf(stderr, "Stack is full\n");
         errno = EAGAIN;
         return -1;
     }
 
-    s->tasks[th][s->top[th]] = (struct task_info){closure, f};
-    s->top[th] = next;
+    s->tasks[th][s->bottom[th]] = (struct task_info){closure, f};
+    s->bottom[th] = next;
 
     pthread_mutex_unlock(&s->mutex);
 
@@ -257,10 +257,10 @@ sched_worker(void *arg)
         found = 0;
         pthread_mutex_lock(&s->mutex);
 
-        if(s->bottom[curr_th] != s->top[curr_th]) {
+        if(s->top[curr_th] != s->bottom[curr_th]) {
             found = 1;
-            s->top[curr_th] = (s->top[curr_th] - 1 + s->qlen) % s->qlen;
-            task = s->tasks[curr_th][s->top[curr_th]];
+            s->bottom[curr_th] = (s->bottom[curr_th] - 1 + s->qlen) % s->qlen;
+            task = s->tasks[curr_th][s->bottom[curr_th]];
         }
 
         if(!found) {
@@ -269,11 +269,12 @@ sched_worker(void *arg)
                 i < s->nthreads; ++i) {
                 target = (i + k) % s->nthreads;
 
-                if(s->bottom[target] != s->top[target]) {
+                if(s->top[target] != s->bottom[target]) {
                     // Tâche trouvée
                     found = 1;
-                    s->top[target] = (s->top[target] - 1 + s->qlen) % s->qlen;
-                    task = s->tasks[target][s->top[target]];
+                    s->bottom[target] =
+                        (s->bottom[target] - 1 + s->qlen) % s->qlen;
+                    task = s->tasks[target][s->bottom[target]];
                     break;
                 }
             }
