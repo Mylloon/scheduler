@@ -8,17 +8,21 @@
 #include <stdlib.h>
 #include <time.h>
 
+#define WIDTH 3840
+#define HEIGHT 2160
 #define ITERATIONS 1000
+
+#define SCALE (WIDTH / 4.0)
+#define DX (WIDTH / 2)
+#define DY (HEIGHT / 2)
 
 struct mandelbrot_args {
     unsigned int *image;
-    double scale;
-    int x, y, dx, dy, width, height;
+    int x, y;
 };
 
 struct mandelbrot_args *
-new_mandelbrot_args(unsigned int *image, double scale, int x, int y, int dx,
-                    int dy, int width, int height)
+new_mandelbrot_args(unsigned int *image, int x, int y)
 {
     struct mandelbrot_args *args;
 
@@ -28,18 +32,13 @@ new_mandelbrot_args(unsigned int *image, double scale, int x, int y, int dx,
     }
 
     args->image = image;
-    args->scale = scale;
     args->x = x;
     args->y = y;
-    args->dx = dx;
-    args->dy = dy;
-    args->width = width;
-    args->height = height;
 
     return args;
 }
 
-static int
+int
 mandel(double complex c)
 {
     double complex z = 0.0;
@@ -51,13 +50,13 @@ mandel(double complex c)
     return i;
 }
 
-static double complex
-toc(int x, int y, int dx, int dy, double scale)
+double complex
+toc(int x, int y)
 {
-    return ((x - dx) + I * (y - dy)) / scale;
+    return ((x - (int)DX) + I * (y - (int)DY)) / SCALE;
 }
 
-static unsigned int
+unsigned int
 torgb(int n)
 {
     unsigned char r, g, b;
@@ -89,11 +88,10 @@ torgb(int n)
 }
 
 void
-pixel(unsigned int *image, double scale, int x, int y, int dx, int dy,
-      int width)
+pixel(unsigned int *image, int x, int y)
 {
-    unsigned rgb = torgb(mandel(toc(x, y, dx, dy, scale)));
-    image[y * width + x] = rgb;
+    unsigned rgb = torgb(mandel(toc(x, y)));
+    image[y * WIDTH + x] = rgb;
 }
 
 void
@@ -101,18 +99,14 @@ draw_pixel(void *closure, struct scheduler *s)
 {
     struct mandelbrot_args *args = (struct mandelbrot_args *)closure;
     unsigned int *image = args->image;
-    double scale = args->scale;
     int x = args->x;
     int y = args->y;
-    int dx = args->dx;
-    int dy = args->dy;
-    int width = args->width;
 
     (void)s; // pas de nouvelle tâche dans le scheduler
 
     free(closure);
 
-    pixel(image, scale, x, y, dx, dy, width);
+    pixel(image, x, y);
 }
 
 void
@@ -120,32 +114,24 @@ draw(void *closure, struct scheduler *s)
 {
     struct mandelbrot_args *args = (struct mandelbrot_args *)closure;
     unsigned int *image = args->image;
-    double scale = args->scale;
-    int dx = args->dx;
-    int dy = args->dy;
-    int width = args->width;
-    int height = args->height;
 
     free(closure);
 
-    for(int y = 0; y < height; y++) {
-        for(int x = 0; x < width; x++) {
-            int rc = sched_spawn(
-                draw_pixel,
-                new_mandelbrot_args(image, scale, x, y, dx, dy, width, height),
-                s);
+    for(int y = 0; y < HEIGHT; y++) {
+        for(int x = 0; x < WIDTH; x++) {
+            int rc =
+                sched_spawn(draw_pixel, new_mandelbrot_args(image, x, y), s);
             assert(rc >= 0);
         }
     }
 }
 
 void
-draw_serial(unsigned int *image, double scale, int dx, int dy, int width,
-            int height)
+draw_serial(unsigned int *image)
 {
-    for(int y = 0; y < height; y++) {
-        for(int x = 0; x < width; x++) {
-            pixel(image, scale, x, y, dx, dy, width);
+    for(int y = 0; y < HEIGHT; y++) {
+        for(int x = 0; x < WIDTH; x++) {
+            pixel(image, x, y);
         }
     }
 }
@@ -157,13 +143,9 @@ benchmark_mandelbrot(int serial, int nthreads)
     struct timespec begin, end;
     double delay;
     int rc;
-    int width = 3840;
-    int height = 2160;
-    double scale = width / 4.0;
-    int dx = width / 2;
-    int dy = height / 2;
+    int size = WIDTH * HEIGHT;
 
-    if(!(image = malloc(width * height * sizeof(unsigned int)))) {
+    if(!(image = malloc(size * sizeof(unsigned int)))) {
         perror("Image allocation");
         return 1;
     }
@@ -171,11 +153,9 @@ benchmark_mandelbrot(int serial, int nthreads)
     clock_gettime(CLOCK_MONOTONIC, &begin);
 
     if(serial) {
-        draw_serial(image, scale, dx, dy, width, height);
+        draw_serial(image);
     } else {
-        rc = sched_init(
-            nthreads, width * height, draw,
-            new_mandelbrot_args(image, scale, 0, 0, dx, dy, width, height));
+        rc = sched_init(nthreads, size, draw, new_mandelbrot_args(image, 0, 0));
         assert(rc >= 0);
     }
 
@@ -183,7 +163,7 @@ benchmark_mandelbrot(int serial, int nthreads)
     delay = end.tv_sec + end.tv_nsec / 1000000000.0 -
             (begin.tv_sec + begin.tv_nsec / 1000000000.0);
 
-    imageSaveBMP("mandelbrot.bmp", (unsigned char *)image, width, height, 3, 8);
+    imageSaveBMP("mandelbrot.bmp", (unsigned char *)image, WIDTH, HEIGHT, 3, 8);
     free(image);
     return delay;
 }
