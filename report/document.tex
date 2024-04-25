@@ -1,12 +1,8 @@
 \DocumentMetadata{testphase = {phase-II,sec,toc,graphic,minipage,float,text}}
-\documentclass{article}
+\documentclass[a4paper]{article}
 
 \usepackage[T1]{fontenc} % encoding
 \renewcommand{\familydefault}{\sfdefault} % sans-serif font
-
-% Langages
-\usepackage[french]{babel}
-\frenchsetup{SmallCapsFigTabCaptions=false}
 
 % Add \extra info to title
 \makeatletter
@@ -23,6 +19,12 @@
 \usepackage{minted}
 \setminted[c]{autogobble,frame=lines}
 \usemintedstyle{emacs}
+
+% Langages
+\usepackage[french]{babel}
+\frenchsetup{SmallCapsFigTabCaptions=false}
+\usepackage{csquotes}
+\MakeOuterQuote{"}
 
 % Images
 \usepackage{graphicx}
@@ -50,11 +52,12 @@
 \newcommand{\docref}[1]{\textit{\nameref{#1}}} % italic nameref
 
 % Aliases
-\def\coeurs{c\oe{}urs}
+\def\coeur{c\oe{}ur}
 \def\mone{\textit{Machine 1}} % fixe
 \def\mtwo{\textit{Machine 2}} % portable
 \def\bone{\textit{Benchmark quicksort}}
 \def\btwo{\textit{Benchmark mandelbrot}}
+\def\ws{\enquote{work-stealing}}
 
 \begin{document}
 \maketitle
@@ -86,20 +89,34 @@ Même fonctionnement que dans l'algorithme de \docref{desc:th_pile}, sauf
 qu'au lieu de récupérer la dernière tâche, on récupère une tâche
 aléatoire de la pile.
 
-\subsection{Répartition par work-stealing}\label{desc:ws}
-% TODO: Faire des phrases
-\begin{itemize}
-  \item Au lieu d'avoir une pile unique, chaque thread à sa propre liste
-  \item Chaque tâche est ajouté sur le même thread de sa création.
-  \item Quand un thread n'as pas de tâches à faire, il vole une tâche à un autre
-        thread, en partant de la fin
-\end{itemize}
+\subsection{Répartition par \ws}\label{desc:ws}
+Ici, chaque \coeur~a sa propre liste de tâche. Quand un thread n'as
+plus de tâche, il essaie d'en voler une à un autre thread.
+
 
 \section{Comportement}
-% TODO
-%   Expliquer comportement LIFO vs WS
-%   Expliquer comportement dans le code
-%   Expliquer ce qu'il se passe quand on modifie le nombre de threads
+
+\subsection{Listes}
+Dans l'ordonnanceur LIFO, la liste est une pile. Chaque thread récupère le
+premier élément de la pile, c'est-à-dire le dernier à avoir été ajouté.
+
+Avec la répartition par \ws, la liste est une deque. Comme dans l'ordonnanceur
+LIFO, chaque thread récupère le premier élément de la deque, mais quand il y a
+un vol, c'est le dernier élément qui est récupéré par le thread.
+
+\subsection{Synchronisations}
+Dans mes implémentations, j'ai exclusivement utilisé des mutex ainsi que des
+variables de conditions pour endormir/réveiller mes threads.
+
+\subsection{Nombre de threads}
+Pour avoir un programme performant, il faut équilibrer le nombre de threads par
+rapport aux nombres de \coeur{}s disponibles. Il faut également équilibrer la
+création de nouvelles tâches par thread par rapport au véritable travail
+effectué par ledit thread. Par exemple dans le \btwo, chaque tâche soit créer 4
+nouvelles tâches, soit calcule une portion de l'image. Une plus grande création
+de tâche favorise le \ws~parce qu'une pile unique atteint ses limites quand
+trop de tâches est ajouté, car les threads n'ont pas le temps "d'abattre
+le travail" assez rapidement.
 
 \section{Statistiques}
 
@@ -107,8 +124,8 @@ Chaque implémentation a été testée avec l'optimisation de niveau 2
 de \texttt{gcc}, sur 2 machines.
 
 \begin{enumerate}
-  \item \textbf{12 \coeurs} pour la \mone.
-  \item \textbf{8 \coeurs} pour la \mtwo.
+  \item \textbf{12 \coeur{}s} pour la \mone.
+  \item \textbf{8 \coeur{}s} pour la \mtwo.
 \end{enumerate}
 
 Le programme utilisé pour tester les implémentations sont le quicksort fourni
@@ -187,15 +204,19 @@ et donc il faut gérer les tâches et décider de quelle tâche va sur quel thre
 Le lancement de nouveau thread étant limité, les performances
 sont grandement améliorées par rapport aux tests de \docref{stats:th_ges}.
 
-Également grâce au fait que désormais on utilise les \coeurs~de notre CPU,
+Également grâce au fait que désormais on utilise les \coeur{}s~de notre CPU,
 les performances sont aussi améliorées par rapport aux tests de
 \docref{stats:seq}.
 
-% TODO: parler de l'image
+Dans la \autoref{fig:btm-lifo}, on observe que les \coeur{}s du CPU ne sont pas
+tous utilisé à 100\%. Ceci est dû au fait que l'accès à la liste des tâches est
+limité, car partagé entres les threads.
+
 \begin{figure}[h!]
   \centering
   \includegraphics[alt={Graphique},width=\textwidth]{imgs/bottom-lifo.jpg}
   \caption{Utilisation ressources sur la \mone~avec \docref{desc:th_pile}}
+  \label{fig:btm-lifo}
 \end{figure}
 
 \subsubsection{Sélection aléatoire de tâche}
@@ -223,7 +244,7 @@ ajouté.
 
 Cette façon de faire réduit les performances.
 
-\subsection{Répartition par work-stealing}
+\subsection{Répartition par \ws}
 \begin{description}
   \item[\bone] \hspace{1em}
         \begin{description}
@@ -245,24 +266,30 @@ Cette façon de faire réduit les performances.
 Dans cet implémentation, on n'utilises plus une pile mais un deque de tâches.
 Cette façon de faire est légèrement meilleur que \docref{desc:th_pile}.
 
-% TODO: parler de l'image
+Dans la \autoref{fig:btm-ws}, on observe que les \coeur{}s du CPU sont
+proche de 100\% d'utilisation. Comparé à \docref{stats:stack}, on gagne
+en moyenne \approx~10\% de l'utilisation du processeur dans son entièreté.
+
 \begin{figure}[h!]
   \centering
   \includegraphics[alt={Graphique},width=\textwidth]{imgs/bottom-ws.jpg}
   \caption{Exploitation des ressources sur la \mone~avec \docref{desc:ws}}
+  \label{fig:btm-ws}
 \end{figure}
 
 \clearpage
 \appendix
+\section{Crédits}
 
-% TODO
-% Images à insérer
-% Mettre un lien vers Fares + mentionner que j'ai testé via sa fonction bmp
+J'ai utilisé un bout de code de \href{https://expreg.org/amsi/C/}{Farès Belhadj}
+d'un TP de L2 pour afficher une image au format \texttt{bmp} afin vérifier que
+le \btwo~fonctionnait correctement. Ce qui donne la \autoref{fig:mandelbrot}.
 
 \begin{figure}[h!]
   \centering
   \includegraphics[alt={Fractale mandelbrot},width=0.7\textwidth]{imgs/mandelbrot.jpg}
   \caption{Example de Mandelbrot}
+  \label{fig:mandelbrot}
 \end{figure}
 
 \end{document}
