@@ -1,8 +1,11 @@
 \DocumentMetadata{testphase = {phase-II,sec,toc,graphic,minipage,text}}
 \documentclass[a4paper]{article}
 
+
+% Fonts
 \usepackage[T1]{fontenc} % encoding
-\renewcommand{\familydefault}{\sfdefault} % sans-serif font
+\renewcommand{\familydefault}{\sfdefault} % sans-serif
+
 
 % Add \extra info to title
 \makeatletter
@@ -15,11 +18,13 @@
 }
 \makeatother
 
+
 % Code integration
 \usepackage{minted}
 \setminted[c]{autogobble,frame=lines} % code
 \setminted[ada]{autogobble}           % stats de vol
 \usemintedstyle{emacs}
+
 
 % Langages
 \usepackage[french]{babel}
@@ -27,12 +32,24 @@
 \usepackage{csquotes}
 \MakeOuterQuote{"}
 
+
 % Images
 \usepackage{graphicx}
 \usepackage{caption}
 \captionsetup{justification=centering}
 
-\def\titleName{Projet : Un ordonnanceur par work stealing}
+
+% Aliases
+\def\coeur{c\oe{}ur}
+\def\mone{\textit{Machine 1}} % fixe
+\def\mtwo{\textit{Machine 2}} % portable
+\def\bone{\textit{Benchmark quicksort}}
+\def\btwo{\textit{Benchmark mandelbrot}}
+\def\ws{\enquote{work-stealing}}
+
+
+% Metadatas
+\def\titleName{Projet : Un ordonnanceur par \ws}
 \def\docTitle{\href{https://www.irif.fr/~jch/enseignement/systeme/projet.pdf}{\titleName}}
 
 \def\anri{Anri Kennel}
@@ -52,21 +69,17 @@
 \extra{\docSubject~$\cdot$ \docLocation}
 \date{Année universitaire 2023-2024}
 
+
+% Commands
 \newcommand{\docref}[1]{\textit{\nameref{#1}}} % italic nameref
 
-% Aliases
-\def\coeur{c\oe{}ur}
-\def\mone{\textit{Machine 1}} % fixe
-\def\mtwo{\textit{Machine 2}} % portable
-\def\bone{\textit{Benchmark quicksort}}
-\def\btwo{\textit{Benchmark mandelbrot}}
-\def\ws{\enquote{work-stealing}}
 
 \begin{document}
 \maketitle
 \flushbottom
 \tableofcontents
 \clearpage
+
 
 \section{Descriptions}
 Description des différents algorithmes implémentés.
@@ -129,7 +142,8 @@ création de tâches favorise le \ws~parce qu'une pile unique atteint ses limite
 quand trop de tâches sont ajoutées, car les threads n'ont pas le temps
 "d'abattre le travail" assez rapidement.
 
-\section{Statistiques}
+
+\section{Statistiques}\label{sec:stats}
 
 Chaque implémentation a été testée avec l'optimisation de niveau 2
 de \texttt{gcc}, sur 2 machines.
@@ -339,10 +353,18 @@ tout est additionné quand toutes les tâches sont terminées.
         \end{description}
 \end{description}
 
+Nous pouvons remarquer que moins il y a de vols échoués,
+meilleur est le temps d'exécution. Également, le nombre de vols échoués est
+faible quand beaucoup de tâches sont créées, car la probabilité qu'un thread ait
+des tâches en attente est plus grande.
+
+
 \section{Interprétation}
-\dots
-% TODO: Ici il faudrait interpréter les données/statistiques de la section
-%       du dessus
+En se basant sur les résultats des tests de \docref{sec:stats}, on remarque
+que l'algorithme de \ws~est le plus performant dans la \mone~ainsi que dans
+la \mtwo. Nous voyons aussi que ce système profite d'un grand nombre de
+tâches créées, car le \btwo~créant quatre tâches d'un coup provoque nettement
+moins de vol comparé au \bone~qui n'en crée que deux.
 
 \clearpage
 \appendix
