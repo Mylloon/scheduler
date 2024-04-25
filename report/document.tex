@@ -24,6 +24,9 @@
 \setminted[c]{autogobble,frame=lines}
 \usemintedstyle{emacs}
 
+% Images
+\usepackage{graphicx}
+
 \def\titleName{Projet : Un ordonnanceur par work stealing}
 \def\docTitle{\href{https://www.irif.fr/~jch/enseignement/systeme/projet.pdf}{\titleName}}
 
@@ -48,16 +51,16 @@
 
 % Aliases
 \def\coeurs{c\oe{}urs}
-
+\def\mone{\textit{Machine 1}} % fixe
+\def\mtwo{\textit{Machine 2}} % portable
+\def\bone{\textit{Benchmark quicksort}}
+\def\btwo{\textit{Benchmark mandelbrot}}
 
 \begin{document}
 \maketitle
 \flushbottom
 \tableofcontents
 \clearpage
-
-% TODO: Mandelbrot
-% TODO: Computer 2
 
 \section{Descriptions}
 Description des différents algorithmes implémentés.
@@ -83,7 +86,8 @@ Même fonctionnement que dans l'algorithme de \docref{desc:th_pile}, sauf
 qu'au lieu de récupérer la dernière tâche, on récupère une tâche
 aléatoire de la pile.
 
-\subsection{Répartition par work-stealing}
+\subsection{Répartition par work-stealing}\label{desc:ws}
+% TODO: Faire des phrases
 \begin{itemize}
   \item Au lieu d'avoir une pile unique, chaque thread à sa propre liste
   \item Chaque tâche est ajouté sur le même thread de sa création.
@@ -91,13 +95,13 @@ aléatoire de la pile.
         thread, en partant de la fin
 \end{itemize}
 
+\section{Comportement}
+% TODO
+%   Expliquer comportement LIFO vs WS
+%   Expliquer comportement dans le code
+%   Expliquer ce qu'il se passe quand on modifie le nombre de threads
+
 \section{Statistiques}
-
-\def\mone{\textit{Machine 1}} % fixe
-\def\mtwo{\textit{Machine 2}} % portable
-
-\def\bone{\textit{Benchmark quicksort}}
-\def\btwo{\textit{Benchmark mandelbrot}}
 
 Chaque implémentation a été testée avec l'optimisation de niveau 2
 de \texttt{gcc}, sur 2 machines.
@@ -187,6 +191,13 @@ sont grandement améliorées par rapport aux tests de \docref{stats:th_ges}.
 les performances sont aussi améliorées par rapport aux tests de
 \docref{stats:seq}.
 
+% TODO: parler de l'image
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\textwidth]{imgs/bottom-lifo.jpg}
+  \caption{Utilisation ressources sur la \mone~avec \docref{desc:th_pile}}
+\end{figure}
+
 \subsubsection{Sélection aléatoire de tâche}
 \begin{description}
   \item[\bone] \hspace{1em}
@@ -233,5 +244,25 @@ Cette façon de faire réduit les performances.
 
 Dans cet implémentation, on n'utilises plus une pile mais un deque de tâches.
 Cette façon de faire est légèrement meilleur que \docref{desc:th_pile}.
+
+% TODO: parler de l'image
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\textwidth]{imgs/bottom-ws.jpg}
+  \caption{Exploitation des ressources sur la \mone~avec \docref{desc:ws}}
+\end{figure}
+
+\clearpage
+\appendix
+
+% TODO
+% Images à insérer
+% Mettre un lien vers Fares + mentionner que j'ai testé via sa fonction bmp
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.7\textwidth]{imgs/mandelbrot.jpg}
+  \caption{Example de Mandelbrot}
+\end{figure}
 
 \end{document}
