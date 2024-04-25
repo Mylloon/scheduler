@@ -82,13 +82,13 @@ Comme cette implémentation n'ordonnance rien et que le nombre de threads créer
 est important.
 
 \subsection{Threads avec pile}\label{desc:th_pile}
-Pour cette implémentation, on garde en mémoire une pile,
-et on démarre un nombre fixe de threads et à chaque ajout d'une tâche,
-on l'empile. Chaque thread récupère la dernière tâche ajoutée à la pile.
+Pour cette implémentation, nous gardons en mémoire une pile,
+et nous démarrons un nombre fixe de threads et à chaque ajout d'une tâche,
+le thread l'empile. Chaque thread récupère la dernière tâche ajoutée à la pile.
 
 \subsubsection{Sélection aléatoire de tâche}
 Même fonctionnement que dans l'algorithme de \docref{desc:th_pile}, sauf
-qu'au lieu de récupérer la dernière tâche, on récupère une tâche
+qu'au lieu de récupérer la dernière tâche, le thread récupère une tâche
 aléatoire de la pile.
 
 \subsection{Répartition par \ws}\label{desc:ws}
@@ -109,6 +109,14 @@ un vol, c'est le dernier élément qui est récupéré par le thread.
 \subsection{Synchronisations}
 Dans mes implémentations, j'ai exclusivement utilisé des mutex ainsi que des
 variables de conditions pour endormir/réveiller mes threads.
+
+Pendant le développement j'ai parfois utilisé \texttt{usleep} au lieu des
+variables de conditions pour faire attendre les threads, mais j'ai obtenu de
+meilleurs résultats avec les variables de conditions. Aussi je pense qu'avoir
+les variables de conditions m'assure que mon ordonnanceur fonctionne sur
+n'importe quel CPU, qu'il soit lent ou rapide, avec des performances honnêtes.
+En effet, choisir une valeur qui fonctionne bien sur mon ordinateur n'assure pas
+qu'elle soit la meilleure pour un autre.
 
 \subsection{Nombre de threads}
 Pour avoir un programme performant, il faut équilibrer le nombre de threads par
@@ -206,11 +214,11 @@ et donc il faut gérer les tâches et décider de quelle tâche va sur quel thre
 Le lancement de nouveau thread étant limité, les performances
 sont grandement améliorées par rapport aux tests de \docref{stats:th_ges}.
 
-Également grâce au fait que désormais on utilise les \coeur{}s~de notre CPU,
+Également grâce au fait que désormais nous utilisons les \coeur{}s~de notre CPU,
 les performances sont aussi améliorées par rapport aux tests de
 \docref{stats:seq}.
 
-Dans la \autoref{fig:btm-lifo}, on observe que les \coeur{}s du CPU ne sont pas
+Dans la \autoref{fig:btm-lifo}, nous observons que les \coeur{}s du CPU ne sont pas
 tous utilisé à 100\%. Ceci est dû au fait que l'accès à la liste des tâches est
 limité, car partagé entres les threads.
 
@@ -241,8 +249,8 @@ limité, car partagé entres les threads.
 \end{description}
 
 Cette implémentation est identique à \docref{stats:stack}, à l'exception que
-l'on récupère une tâche aléatoire de la pile au lieu d'y prendre la dernière
-ajouté.
+les threads récupèrent une tâche aléatoire de la pile au lieu d'y prendre
+la dernière ajouté.
 
 Cette façon de faire réduit les performances.
 
@@ -265,11 +273,11 @@ Cette façon de faire réduit les performances.
         \end{description}
 \end{description}
 
-Dans cet implémentation, on n'utilises plus une pile mais un deque de tâches.
+Dans cet implémentation, nous n'utilisons plus une pile mais un deque de tâches.
 Cette façon de faire est légèrement meilleur que \docref{desc:th_pile}.
 
-Dans la \autoref{fig:btm-ws}, on observe que les \coeur{}s du CPU sont
-proche de 100\% d'utilisation. Comparé à \docref{stats:stack}, on gagne
+Dans la \autoref{fig:btm-ws}, nous observons que les \coeur{}s du CPU sont
+proche de 100\% d'utilisation. Comparé à \docref{stats:stack}, nous gagnons
 en moyenne \approx~10\% de l'utilisation du processeur dans son entièreté.
 
 \begin{figure}[h!]
