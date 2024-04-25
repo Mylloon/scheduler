@@ -21,8 +21,8 @@ Exemple : quicksort en utilisant tous les cœurs disponibles
   ./ordonnanceur.elf -qt 0
 
 
-Cible du makefile
---------------
+Cibles du makefile
+------------------
 
 Il est possible d'utiliser d'autres implémentations d'ordonnanceur en changeant
 la cible du Makefile.
@@ -33,11 +33,10 @@ la cible du Makefile.
 * `make ws`      : work-stealing
 
 
-Infos
------
+Informations
+------------
 
 Le rapport se trouve dans le dossier courant.
-
 Lien vers le dépôt : https://git.mylloon.fr/Paris7/work-stealing-scheduler
 
 Anri Kennel 22302653
