@@ -17,7 +17,8 @@
 
 % Code integration
 \usepackage{minted}
-\setminted[c]{autogobble,frame=lines}
+\setminted[c]{autogobble,frame=lines} % code
+\setminted[ada]{autogobble}           % stats de vol
 \usemintedstyle{emacs}
 
 % Langages
@@ -287,10 +288,59 @@ en moyenne \approx~10 \% de l'utilisation du processeur dans son entièreté.
   \label{fig:btm-ws}
 \end{figure}
 
-% TODO: Afficher les statistiques de vols (+ parler de la structure qui récupère
-%       ses données pour bien dire que on les récupère pas à la sauvage)
+Concernant les statistiques de vols, les résultats sont obtenus en récupérant
+les données par thread en prenant des précautions pour ne pas dégrader les
+performances de l'ordonnanceur. Les données sont récoltées par thread et ensuite
+tout est additionné quand toutes les tâches sont terminées.
+
+\begin{description}
+  \item[\bone] \hspace{1em}
+        \begin{description}
+          \item[\mone] \hspace{1em}
+                \begin{minted}{ada}
+                  ------- Satistiques -------
+                   Total tâches       : 368439
+                   Total vols         : 5484
+                   Total vols réussis : 5222
+                   Total vols échoués : 262
+                  ----------------------------
+                \end{minted}
+          \item[\mtwo] \hspace{1em}
+                \begin{minted}{ada}
+                  ------- Satistiques -------
+                   Total tâches       : ???
+                   Total vols         : ???
+                   Total vols réussis : ???
+                   Total vols échoués : ???
+                  ----------------------------
+                \end{minted}
+        \end{description}
+
+  \item[\btwo] \hspace{1em}
+        \begin{description}
+          \item[\mone] \hspace{1em}
+                \begin{minted}{ada}
+                  ------- Statistiques -------
+                   Total tâches       : 873813
+                   Total vols         : 23232
+                   Total vols réussis : 23192
+                   Total vols échoués : 40
+                  ----------------------------
+                \end{minted}
+          \item[\mtwo] \hspace{1em}
+                \begin{minted}{ada}
+                  ------- Satistiques -------
+                   Total tâches       : ???
+                   Total vols         : ???
+                   Total vols réussis : ???
+                   Total vols échoués : ???
+                  ----------------------------
+                \end{minted}
+        \end{description}
+\end{description}
 
 \section{Interprétation}
+\dots
 % TODO: Ici il faudrait interpréter les données/statistiques de la section
 %       du dessus
 
