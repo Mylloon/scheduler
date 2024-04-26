@@ -37,8 +37,10 @@
 \def\coeur{c\oe{}ur}
 \def\mone{\textit{Machine 1}} % fixe
 \def\mtwo{\textit{Machine 2}} % portable
-\def\bone{\textit{Benchmark quicksort}}
-\def\btwo{\textit{Benchmark mandelbrot}}
+\def\qs{\enquote{quicksort}}
+\def\mandel{\enquote{mandelbrot}}
+\def\bone{\textit{Benchmark \qs}}
+\def\btwo{\textit{Benchmark \mandel}}
 \def\ws{\enquote{work-stealing}}
 
 
@@ -149,16 +151,12 @@
 \section{Descriptions}
 Description des différents algorithmes implémentés.
 
-\subsection{Séquentiel}
-Cette implémentation naïve correspond au mode \texttt{serial}
-de \texttt{quicksort.c}. Elle lance les tâches sans threads.
+\subsection{Séquentiel}\label{desc:seq}
+Cette implémentation lance les tâches sur un \coeur.
 
-\subsection[Threads sans gestion]{Threads sans gestion}
+\subsection{Threads sans gestion}\label{desc:threads}
 Cette implémentation correspond à simplement démarrer un nouveau thread
 pour chaque nouvelle tâche.
-
-Comme cette implémentation n'ordonnance rien et que le nombre de threads créés
-est important.
 
 \subsection{Threads avec pile}\label{desc:th_pile}
 Pour cette implémentation, nous gardons en mémoire une pile et nous démarrons
@@ -177,6 +175,12 @@ plus de tâches, il essaie d'en voler une à un autre thread.
 
 \section{Comportement}
 
+Analyse du comportement des différentes implémentations.
+
+\subsection{Threads sans gestion}
+Cette implémentation n'ordonnance rien, alors le nombre de threads
+créés est important.
+
 \subsection{Listes}
 Dans l'ordonnanceur LIFO, la liste est une pile. Chaque thread récupère le
 premier élément de la pile, c'est-à-dire le dernier à avoir été ajouté.
@@ -189,19 +193,19 @@ un vol, c'est le dernier élément qui est récupéré par le thread.
 Dans mes implémentations, j'ai exclusivement utilisé des mutex ainsi que des
 variables de conditions pour endormir/réveiller mes threads.
 
-Pendant le développement, j'ai parfois utilisé \texttt{usleep} au lieu des
-variables de conditions pour faire attendre les threads, mais j'ai obtenu de
-meilleurs résultats avec les variables de conditions. Aussi, je pense qu'avoir
-les variables de conditions m'assure que mon ordonnanceur fonctionne sur
-n'importe quel CPU, qu'il soit lent ou rapide, avec des performances honnêtes.
-En effet, choisir une valeur qui fonctionne bien sur mon ordinateur n'assure pas
-qu'elle soit la meilleure pour un autre.
+Pendant le développement, j'ai parfois utilisé \texttt{usleep} pour interrompre
+à temps donné un thread au lieu des variables de conditions pour faire
+attendre les threads, mais j'ai obtenu de meilleurs résultats avec les variables
+de conditions. Aussi, je pense qu'avoir les variables de conditions m'assure
+que mon ordonnanceur fonctionne sur n'importe quel CPU, qu'il soit lent ou rapide,
+avec des performances honnêtes. En effet, choisir une valeur qui fonctionne bien
+sur mon ordinateur n'assure pas qu'elle soit la meilleure pour un autre processeur.
 
 \subsection{Nombre de threads}
 Pour avoir un programme performant, il faut équilibrer le nombre de threads par
 rapport aux nombres de \coeur{}s disponibles. Il faut également équilibrer la
 création de nouvelles tâches par thread par rapport au véritable travail
-effectué par ledit thread. Par exemple, dans le \btwo, chaque tâche soit crée
+effectué par ledit thread. Par exemple, dans le \btwo, chaque tâche crée soit
 quatre nouvelles tâches, soit calcule une portion de l'image. Une plus grande
 création de tâches favorise le \ws~parce qu'une pile unique atteint ses limites
 quand trop de tâches sont ajoutées, car les threads n'ont pas le temps
@@ -218,9 +222,18 @@ de \texttt{gcc}, sur 2 machines.
   \item \textbf{8 \coeur{}s} pour la \mtwo.
 \end{enumerate}
 
-Le programme utilisé pour tester les implémentations est le quicksort fourni
-et une adaptation de mandelbrot fournie dans le
+Les benchmarks utilisés pour tester les implémentations sont le \qs~fourni
+et une adaptation de \mandel~fournie dans le
 \href{https://www.irif.fr/~jch/enseignement/systeme/tp10.pdf}{TP 10}.
+
+Pour lancer plusieurs fois le programme, j'ai utilisé la commande
+\mintinline{fish}|for| du shell \texttt{fish}. Pour exemple, voici la commande
+pour lancer l'ordonnanceur 100 fois avec \qs~et tous les threads disponibles :
+
+\begin{figure}[H]
+  \centering
+  \mintinline{fish}|for i in (seq 100); ./ordonnanceur.elf -qt 0; end|
+\end{figure}
 
 \subsection{Séquentiel}\label{stats:seq}
 \begin{description}
@@ -243,7 +256,16 @@ et une adaptation de mandelbrot fournie dans le
 
 \statPlot{serial}{en séquentiel}
 
-Ce programme ne bénéficie pas de toute la puissance de la machine.
+\begin{figure}[H]
+  \centering
+  \includegraphics[alt={Graphique},width=\textwidth]{imgs/bottom-seq.jpg}
+  \caption{Exploitation des ressources sur la \mone~avec \docref{desc:seq}}
+  \label{fig:btm-seq}
+\end{figure}
+
+Ce programme ne bénéficie pas de toute la puissance de la machine,
+visible notamment grâce à la \autoref{fig:btm-seq} où l'on voit que seulement
+un \coeur~est utilisé.
 
 \subsection{Threads sans gestion}\label{stats:th_ges}
 
@@ -267,14 +289,25 @@ Ce programme ne bénéficie pas de toute la puissance de la machine.
 
 \statPlot{solution1}{avec des threads}
 
-La création des threads pour chaque tâche crée un énorme
-goulot d'étranglement qui réduit de grandement les performances.
+\begin{figure}[H]
+  \centering
+  \includegraphics[alt={Graphique},width=\textwidth]{imgs/bottom-threads.jpg}
+  \caption{Exploitation des ressources sur la \mone~avec \docref{desc:threads}}
+  \label{fig:btm-threads}
+\end{figure}
 
-Le temps d'exécution étant long, nous pouvons voir les threads via la commande
-\texttt{top} : \mintinline{bash}|top -Hp $(pgrep ordonnanceur)|.
+La création des threads pour chaque tâche crée un énorme goulot
+d'étranglement qui réduit grandement les performances. On le voit notamment
+sur la \autoref{fig:btm-threads} où tous les \coeur{}s sont utilisés, mais très
+peu. Créer de façon incontrôlée des threads n'est pas une manière efficace de
+répartir la charge.
 
-Pour augmenter les performances, il faut avoir une taille fixe de threads crée,
-et donc il faut gérer les tâches et décider de quelle tâche va sur quel thread.
+% Le temps d'exécution étant long, nous pouvons voir les threads avec la commande
+% \texttt{top} : \mintinline{bash}|top -Hp $(pgrep ordonnanceur)|.
+
+Pour augmenter les performances, il faut donc avoir une taille fixe de threads,
+et par conséquent, il faut gérer les tâches et décider de quelle tâche va sur
+quel thread.
 
 \subsection{Threads avec pile}\label{stats:stack}
 \begin{description}
@@ -305,7 +338,7 @@ les performances sont aussi améliorées par rapport aux tests de
 \docref{stats:seq}.
 
 Dans la \autoref{fig:btm-lifo}, nous observons que les \coeur{}s du CPU ne sont pas
-tous utilisés à 100 \%. Ceci est dû au fait que l'accès à la liste des tâches est
+tous utilisés à 100~\%. Ceci est dû au fait que l'accès à la liste des tâches est
 limité, car partagé entre les threads.
 
 \begin{figure}[H]
@@ -367,8 +400,8 @@ Dans cette implémentation, nous n'utilisons plus une pile, mais un deque de tâ
 Cette façon de faire est légèrement meilleur que \docref{desc:th_pile}.
 
 Dans la \autoref{fig:btm-ws}, nous observons que les \coeur{}s du CPU sont
-proches de 100 \% d'utilisation. Comparé à \docref{stats:stack}, nous gagnons
-en moyenne \approx~10 \% de l'utilisation du processeur dans son entièreté.
+proches de 100~\% d'utilisation. Comparé à \docref{stats:stack}, nous gagnons
+en moyenne \approx~10~\% de l'utilisation du processeur dans son entièreté.
 
 \begin{figure}[H]
   \centering
@@ -459,13 +492,12 @@ le \btwo~fonctionnait correctement. Ce qui donne la \autoref{fig:mandelbrot}.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[alt={Fractale mandelbrot},width=0.7\textwidth]{imgs/mandelbrot.jpg}
-  \caption{Example de Mandelbrot}
+  \includegraphics[alt={Fractale \mandel},width=0.7\textwidth]{imgs/mandelbrot.jpg}
+  \caption{Example de \mandel}
   \label{fig:mandelbrot}
 \end{figure}
 
-Les captures d'écran de la \autoref{fig:btm-lifo} et de la \autoref{fig:btm-ws}
-ont été prises via le
+Les captures d'écran d'exploitation des ressources ont été prises via le
 programme \href{https://github.com/ClementTsang/bottom}{bottom}.
 
 \end{document}
