@@ -76,7 +76,7 @@
 
 % Commands
 \newcommand{\docref}[1]{\textit{\nameref{#1}}} % italic nameref
-\newcommand{\statPlot}[1]{ % Plot for stats
+\newcommand{\statPlot}[2]{ % Plot for stats
   \begin{figure}[H]
     \def\side{0.5\textwidth}
     \def\width{\textwidth}
@@ -107,7 +107,7 @@
               /pgf/number format/read comma as period] {data/machine2-quicksort.csv};
         \end{axis}
       \end{tikzpicture}
-      \caption{Temps d'exécution pour \bone}
+      \caption{Temps d'exécution pour \bone~\textit{#2}}
     \end{minipage}\hfill
     \begin{minipage}{\side}
       \centering
@@ -134,7 +134,7 @@
           \addlegendentry{\mtwo}
         \end{axis}
       \end{tikzpicture}
-      \caption{Temps d'exécution pour \btwo}
+      \caption{Temps d'exécution pour \btwo~\textit{#2}}
     \end{minipage}
   \end{figure}
 }
@@ -241,7 +241,7 @@ et une adaptation de mandelbrot fournie dans le
         \end{description}
 \end{description}
 
-\statPlot{serial}
+\statPlot{serial}{en séquentiel}
 
 Ce programme ne bénéficie pas de toute la puissance de la machine.
 
@@ -265,7 +265,7 @@ Ce programme ne bénéficie pas de toute la puissance de la machine.
         \end{description}
 \end{description}
 
-\statPlot{solution1}
+\statPlot{solution1}{avec des threads}
 
 La création des threads pour chaque tâche crée un énorme
 goulot d'étranglement qui réduit de grandement les performances.
@@ -295,7 +295,7 @@ et donc il faut gérer les tâches et décider de quelle tâche va sur quel thre
         \end{description}
 \end{description}
 
-\statPlot{solution2}
+\statPlot{solution2}{avec LIFO}
 
 Le lancement de nouveaux threads étant limité, les performances
 sont grandement améliorées par rapport aux tests de \docref{stats:th_ges}.
@@ -334,7 +334,7 @@ limité, car partagé entre les threads.
         \end{description}
 \end{description}
 
-\statPlot{solution3}
+\statPlot{solution3}{avec LIFO aléatoire}
 
 Cette implémentation est identique à \docref{stats:stack}, à l'exception que
 les threads récupèrent une tâche aléatoire de la pile au lieu d'y prendre
@@ -361,7 +361,7 @@ Cette façon de faire réduit les performances.
         \end{description}
 \end{description}
 
-\statPlot{solution4}
+\statPlot{solution4}{avec du \ws}
 
 Dans cette implémentation, nous n'utilisons plus une pile, mais un deque de tâches.
 Cette façon de faire est légèrement meilleur que \docref{desc:th_pile}.
@@ -386,45 +386,53 @@ tout est additionné quand toutes les tâches sont terminées.
   \item[\bone] \hspace{1em}
         \begin{description}
           \item[\mone] \hspace{1em}
-                \begin{minted}{ada}
-                  ------- Satistiques -------
-                   Total tâches       : 368439
-                   Total vols         : 5484
-                   Total vols réussis : 5222
-                   Total vols échoués : 262
-                  ----------------------------
-                \end{minted}
+                \begin{samepage}
+                  \begin{minted}{ada}
+                    ------- Satistiques -------
+                     Total tâches       : 368439
+                     Total vols         : 5484
+                     Total vols réussis : 5222
+                     Total vols échoués : 262
+                    ----------------------------
+                  \end{minted}
+                \end{samepage}
           \item[\mtwo] \hspace{1em}
-                \begin{minted}{ada}
-                  ------- Statistiques -------
-                   Total tâches       : 368439
-                   Total vols         : 2298
-                   Total vols réussis : 2164
-                   Total vols échoués : 134
-                  ----------------------------
-                \end{minted}
+                \begin{samepage}
+                  \begin{minted}{ada}
+                    ------- Statistiques -------
+                     Total tâches       : 368439
+                     Total vols         : 2298
+                     Total vols réussis : 2164
+                     Total vols échoués : 134
+                    ----------------------------
+                  \end{minted}
+                \end{samepage}
         \end{description}
 
   \item[\btwo] \hspace{1em}
         \begin{description}
           \item[\mone] \hspace{1em}
-                \begin{minted}{ada}
-                  ------- Statistiques -------
-                   Total tâches       : 873813
-                   Total vols         : 23232
-                   Total vols réussis : 23192
-                   Total vols échoués : 40
-                  ----------------------------
-                \end{minted}
+                \begin{samepage}
+                  \begin{minted}{ada}
+                    ------- Statistiques -------
+                     Total tâches       : 873813
+                     Total vols         : 23232
+                     Total vols réussis : 23192
+                     Total vols échoués : 40
+                    ----------------------------
+                  \end{minted}
+                \end{samepage}
           \item[\mtwo] \hspace{1em}
-                \begin{minted}{ada}
-                  ------- Statistiques -------
-                   Total tâches       : 873813
-                   Total vols         : 21491
-                   Total vols réussis : 21465
-                   Total vols échoués : 26
-                  ----------------------------
-                \end{minted}
+                \begin{samepage}
+                  \begin{minted}{ada}
+                    ------- Statistiques -------
+                     Total tâches       : 873813
+                     Total vols         : 21491
+                     Total vols réussis : 21465
+                     Total vols échoués : 26
+                    ----------------------------
+                  \end{minted}
+                \end{samepage}
         \end{description}
 \end{description}
 
