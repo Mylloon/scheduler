@@ -33,12 +33,6 @@
 \MakeOuterQuote{"}
 
 
-% Images
-\usepackage{graphicx}
-\usepackage{caption}
-\captionsetup{justification=centering}
-
-
 % Aliases
 \def\coeur{c\oe{}ur}
 \def\mone{\textit{Machine 1}} % fixe
@@ -48,8 +42,18 @@
 \def\ws{\enquote{work-stealing}}
 
 
+% Plots
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.11}
+
+% Images
+\usepackage{graphicx}
+\usepackage{caption}
+\captionsetup{justification=centering}
+
+
 % Metadatas
-\def\titleName{Projet : Un ordonnanceur par \ws}
+\def\titleName{Projet : Un ordonnanceur par work-stealing}
 \def\docTitle{\href{https://www.irif.fr/~jch/enseignement/systeme/projet.pdf}{\titleName}}
 
 \def\anri{Anri Kennel}
@@ -72,7 +76,68 @@
 
 % Commands
 \newcommand{\docref}[1]{\textit{\nameref{#1}}} % italic nameref
+\newcommand{\statPlot}[1]{ % Plot for stats
+  \begin{figure}[H]
+    \def\side{0.5\textwidth}
+    \def\width{\textwidth}
+    \def\height{0.7\textwidth}
+    \def\xlabel{Itérations}
+    \def\ylabel{Secondes}
+    \def\colname{#1}
 
+    \begin{minipage}{\side}
+      \centering
+      \begin{tikzpicture}
+        \begin{axis}[
+            xlabel={\xlabel},
+            ylabel={\ylabel},
+            width=\width,
+            height=\height
+          ]
+          \addplot [smooth, color=red] table [
+              x expr=\coordindex,
+              y=\colname,
+              col sep=semicolon,
+              /pgf/number format/read comma as period] {data/machine1-quicksort.csv};
+
+          \addplot [smooth, color=blue] table [
+              x expr=\coordindex,
+              y=\colname,
+              col sep=semicolon,
+              /pgf/number format/read comma as period] {data/machine2-quicksort.csv};
+        \end{axis}
+      \end{tikzpicture}
+      \caption{Temps d'exécution pour \bone}
+    \end{minipage}\hfill
+    \begin{minipage}{\side}
+      \centering
+      \begin{tikzpicture}
+        \begin{axis}[
+            xlabel={\xlabel},
+            ylabel={\ylabel},
+            legend pos=outer north east,
+            width=\width,
+            height=\height
+          ]
+          \addplot [smooth, color=red] table [
+              x expr=\coordindex,
+              y=\colname,
+              col sep=semicolon,
+              /pgf/number format/read comma as period] {data/machine1-mandelbrot.csv};
+          \addlegendentry{\mone}
+
+          \addplot [smooth, color=blue] table [
+              x expr=\coordindex,
+              y=\colname,
+              col sep=semicolon,
+              /pgf/number format/read comma as period] {data/machine2-mandelbrot.csv};
+          \addlegendentry{\mtwo}
+        \end{axis}
+      \end{tikzpicture}
+      \caption{Temps d'exécution pour \btwo}
+    \end{minipage}
+  \end{figure}
+}
 
 \begin{document}
 \maketitle
@@ -176,6 +241,7 @@ et une adaptation de mandelbrot fournie dans le
         \end{description}
 \end{description}
 
+\statPlot{serial}
 
 Ce programme ne bénéficie pas de toute la puissance de la machine.
 
@@ -198,6 +264,8 @@ Ce programme ne bénéficie pas de toute la puissance de la machine.
                 Le temps moyen d'exécution a été de \textbf{41,060 secs}
         \end{description}
 \end{description}
+
+\statPlot{solution1}
 
 La création des threads pour chaque tâche crée un énorme
 goulot d'étranglement qui réduit de grandement les performances.
@@ -227,6 +295,8 @@ et donc il faut gérer les tâches et décider de quelle tâche va sur quel thre
         \end{description}
 \end{description}
 
+\statPlot{solution2}
+
 Le lancement de nouveaux threads étant limité, les performances
 sont grandement améliorées par rapport aux tests de \docref{stats:th_ges}.
 
@@ -238,7 +308,7 @@ Dans la \autoref{fig:btm-lifo}, nous observons que les \coeur{}s du CPU ne sont 
 tous utilisés à 100 \%. Ceci est dû au fait que l'accès à la liste des tâches est
 limité, car partagé entre les threads.
 
-\begin{figure}[h!]
+\begin{figure}[H]
   \centering
   \includegraphics[alt={Graphique},width=\textwidth]{imgs/bottom-lifo.jpg}
   \caption{Utilisation ressources sur la \mone~avec \docref{desc:th_pile}}
@@ -263,6 +333,8 @@ limité, car partagé entre les threads.
                 Le temps moyen d'exécution a été de \textbf{1,887 secs}
         \end{description}
 \end{description}
+
+\statPlot{solution3}
 
 Cette implémentation est identique à \docref{stats:stack}, à l'exception que
 les threads récupèrent une tâche aléatoire de la pile au lieu d'y prendre
@@ -289,6 +361,8 @@ Cette façon de faire réduit les performances.
         \end{description}
 \end{description}
 
+\statPlot{solution4}
+
 Dans cette implémentation, nous n'utilisons plus une pile, mais un deque de tâches.
 Cette façon de faire est légèrement meilleur que \docref{desc:th_pile}.
 
@@ -296,7 +370,7 @@ Dans la \autoref{fig:btm-ws}, nous observons que les \coeur{}s du CPU sont
 proches de 100 \% d'utilisation. Comparé à \docref{stats:stack}, nous gagnons
 en moyenne \approx~10 \% de l'utilisation du processeur dans son entièreté.
 
-\begin{figure}[h!]
+\begin{figure}[H]
   \centering
   \includegraphics[alt={Graphique},width=\textwidth]{imgs/bottom-ws.jpg}
   \caption{Exploitation des ressources sur la \mone~avec \docref{desc:ws}}
@@ -375,7 +449,7 @@ J'ai utilisé un bout de code de \href{https://expreg.org/amsi/C/}{Farès Belhad
 d'un TP de L2 pour afficher une image au format \texttt{bmp} afin vérifier que
 le \btwo~fonctionnait correctement. Ce qui donne la \autoref{fig:mandelbrot}.
 
-\begin{figure}[h!]
+\begin{figure}[H]
   \centering
   \includegraphics[alt={Fractale mandelbrot},width=0.7\textwidth]{imgs/mandelbrot.jpg}
   \caption{Example de Mandelbrot}
