@@ -2,6 +2,7 @@
 #include "../includes/sched.h"
 
 #include <assert.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -87,9 +88,19 @@ quicksort(void *closure, struct scheduler *s)
     }
 
     p = partition(a, lo, hi);
-    rc = sched_spawn(quicksort, new_args(a, lo, p), s);
+
+    while((rc = sched_spawn(quicksort, new_args(a, lo, p), s)) < 0) {
+        if(errno != EAGAIN) {
+            break;
+        }
+    }
     assert(rc >= 0);
-    rc = sched_spawn(quicksort, new_args(a, p + 1, hi), s);
+
+    while((rc = sched_spawn(quicksort, new_args(a, p + 1, hi), s)) < 0) {
+        if(errno != EAGAIN) {
+            break;
+        }
+    }
     assert(rc >= 0);
 }
 
