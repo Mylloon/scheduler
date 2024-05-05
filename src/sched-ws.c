@@ -11,10 +11,25 @@ struct task_info {
     taskfunc f;
 };
 
+/* Statistiques */
+struct stats {
+    /* Total des vols échoués */
+    int total_failed_steal;
+
+    /* Total des vols */
+    int total_steal;
+
+    /* Total des tâches effecutés */
+    int total_tasks;
+};
+
 /* Structure de chaque thread */
 struct worker {
     /* Premier élément du deque (dernier ajouter) */
     int bottom;
+
+    /* Statistiques récoltés */
+    struct stats data;
 
     /* Mutex qui protège cette structure */
     pthread_mutex_t mutex;
@@ -101,8 +116,10 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
         return -1;
     }
     for(int i = 0; i < nthreads; ++i) {
-        sched.workers[i].bottom = 0;
-        sched.workers[i].top = 0;
+        // Statistiques
+        sched.workers[i].data.total_failed_steal = 0;
+        sched.workers[i].data.total_steal = 0;
+        sched.workers[i].data.total_tasks = 0;
 
         // Initialisation mutex
         if(pthread_mutex_init(&sched.workers[i].mutex, NULL) != 0) {
@@ -110,13 +127,15 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
             return sched_init_cleanup(sched, -1);
         }
 
-        // Allocation mémoire deque
+        // Initialisation deque
         if(!(sched.workers[i].tasks =
                  malloc(sched.qlen * sizeof(struct task_info)))) {
             fprintf(stderr, "Thread %d: ", i);
             perror("Deque list");
             return sched_init_cleanup(sched, -1);
         }
+        sched.workers[i].bottom = 0;
+        sched.workers[i].top = 0;
     }
 
     // Initialise l'aléatoire
@@ -163,6 +182,25 @@ sched_init(int nthreads, int qlen, taskfunc f, void *closure)
             return sched_init_cleanup(sched, -1);
         }
     }
+
+    /* Statistiques */
+
+    int total_failed_steal = 0;
+    int total_steal = 0;
+    int total_tasks = 0;
+
+    for(int i = 0; i < sched.nthreads; ++i) {
+        total_failed_steal += sched.workers[i].data.total_failed_steal;
+        total_steal += sched.workers[i].data.total_steal;
+        total_tasks += sched.workers[i].data.total_tasks;
+    }
+
+    printf("------- Statistiques -------\n");
+    printf(" Total tâches\t    : %d\n", total_tasks);
+    printf(" Total vols\t    : %d\n", total_steal);
+    printf(" Total vols réussis : %d\n", total_steal - total_failed_steal);
+    printf(" Total vols échoués : %d\n", total_failed_steal);
+    printf("----------------------------\n");
 
     return sched_init_cleanup(sched, 1);
 }
@@ -224,6 +262,8 @@ sched_spawn(taskfunc f, void *closure, struct scheduler *s)
         return -1;
     }
 
+    s->workers[th].data.total_tasks++;
+
     s->workers[th].tasks[s->workers[th].bottom] =
         (struct task_info){closure, f};
     s->workers[th].bottom = next;
@@ -261,6 +301,8 @@ sched_worker(void *arg)
 
         if(!found) {
             // Vol car aucune tâche trouvée
+            s->workers[curr_th].data.total_steal++;
+
             pthread_mutex_lock(&s->mutex);
             int nthreads = s->nthreads;
             pthread_mutex_unlock(&s->mutex);
@@ -285,6 +327,8 @@ sched_worker(void *arg)
 
             // Aucune tâche à faire
             if(!found) {
+                s->workers[curr_th].data.total_failed_steal++;
+
                 pthread_mutex_lock(&s->mutex);
                 s->nthsleep++;
 

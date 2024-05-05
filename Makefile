@@ -1,6 +1,6 @@
 CC    = gcc
 RM    = rm -rf
-TAR   = tar -cf
+TAR   = tar -czf
 CP    = cp -r
 MKDIR = mkdir -p
 
@@ -63,11 +63,11 @@ pdf-clean:
 	$(MAKE) clean
 
 clean: pdf-clean
-	$(RM) $(ALL_OBJECTS) "$(EXE)$(EXE_EXT)" "$(ARCHIVE_NAME).tar"
+	$(RM) $(ALL_OBJECTS) "$(EXE)$(EXE_EXT)" "$(ARCHIVE_NAME).tar.gz"
 
 archive: pdf-make
 	$(MKDIR) "$(ARCHIVE_NAME)"
 	$(CP) "$(SRC_DIR)" "$(INC_DIR)" Makefile README "$(ARCHIVE_NAME)"
 	$(CP) "$(wildcard $(PDF_DIR)/*.pdf)" "$(ARCHIVE_NAME)/$(PDF_NEWNAME).pdf"
-	$(TAR) "$(ARCHIVE_NAME).tar" "$(ARCHIVE_NAME)"
+	$(TAR) "$(ARCHIVE_NAME).tar.gz" "$(ARCHIVE_NAME)"
 	$(RM) "$(ARCHIVE_NAME)"

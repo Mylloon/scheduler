@@ -4,6 +4,7 @@
 
 #include <assert.h>
 #include <complex.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -121,18 +122,46 @@ draw(void *closure, struct scheduler *s)
         // Sinon on recoupe le morceau
         int mid_x = (start_x + end_x) / 2;
         int mid_y = (start_y + end_y) / 2;
+        int rc;
 
-        int rc1 = sched_spawn(
-            draw, new_mandelbrot_args(image, start_x, start_y, mid_x, mid_y),
-            s);
-        int rc2 = sched_spawn(
-            draw, new_mandelbrot_args(image, mid_x, start_y, end_x, mid_y), s);
-        int rc3 = sched_spawn(
-            draw, new_mandelbrot_args(image, start_x, mid_y, mid_x, end_y), s);
-        int rc4 = sched_spawn(
-            draw, new_mandelbrot_args(image, mid_x, mid_y, end_x, end_y), s);
+        while((rc = sched_spawn(
+                   draw,
+                   new_mandelbrot_args(image, start_x, start_y, mid_x, mid_y),
+                   s)) < 0) {
+            if(errno != EAGAIN) {
+                break;
+            }
+        }
+        assert(rc >= 0);
 
-        assert(rc1 >= 0 && rc2 >= 0 && rc3 >= 0 && rc4 >= 0);
+        while(
+            (rc = sched_spawn(
+                 draw, new_mandelbrot_args(image, mid_x, start_y, end_x, mid_y),
+                 s)) < 0) {
+            if(errno != EAGAIN) {
+                break;
+            }
+        }
+        assert(rc >= 0);
+
+        while(
+            (rc = sched_spawn(
+                 draw, new_mandelbrot_args(image, start_x, mid_y, mid_x, end_y),
+                 s)) < 0) {
+            if(errno != EAGAIN) {
+                break;
+            }
+        }
+        assert(rc >= 0);
+
+        while((rc = sched_spawn(
+                   draw, new_mandelbrot_args(image, mid_x, mid_y, end_x, end_y),
+                   s)) < 0) {
+            if(errno != EAGAIN) {
+                break;
+            }
+        }
+        assert(rc >= 0);
     }
 }
 
@@ -147,15 +176,19 @@ draw_serial(unsigned int *image)
 }
 
 double
-benchmark_mandelbrot(int serial, int nthreads)
+benchmark_mandelbrot(int serial, int nthreads, int qlen)
 {
     unsigned int *image;
     struct timespec begin, end;
     double delay;
     int rc;
-    int size = WIDTH * HEIGHT;
+    int n = WIDTH * HEIGHT;
 
-    if(!(image = malloc(size * sizeof(unsigned int)))) {
+    if(qlen <= 0) {
+        qlen = n;
+    }
+
+    if(!(image = malloc(n * sizeof(unsigned int)))) {
         perror("Image allocation");
         return 1;
     }
@@ -165,7 +198,7 @@ benchmark_mandelbrot(int serial, int nthreads)
     if(serial) {
         draw_serial(image);
     } else {
-        rc = sched_init(nthreads, size, draw,
+        rc = sched_init(nthreads, qlen, draw,
                         new_mandelbrot_args(image, 0, 0, WIDTH, HEIGHT));
         assert(rc >= 0);
     }

@@ -2,6 +2,7 @@
 #include "../includes/sched.h"
 
 #include <assert.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -87,20 +88,34 @@ quicksort(void *closure, struct scheduler *s)
     }
 
     p = partition(a, lo, hi);
-    rc = sched_spawn(quicksort, new_args(a, lo, p), s);
+
+    while((rc = sched_spawn(quicksort, new_args(a, lo, p), s)) < 0) {
+        if(errno != EAGAIN) {
+            break;
+        }
+    }
     assert(rc >= 0);
-    rc = sched_spawn(quicksort, new_args(a, p + 1, hi), s);
+
+    while((rc = sched_spawn(quicksort, new_args(a, p + 1, hi), s)) < 0) {
+        if(errno != EAGAIN) {
+            break;
+        }
+    }
     assert(rc >= 0);
 }
 
 double
-benchmark_quicksort(int serial, int nthreads)
+benchmark_quicksort(int serial, int nthreads, int qlen)
 {
     int *a;
     struct timespec begin, end;
     double delay;
     int rc;
     int n = 10 * 1024 * 1024;
+
+    if(qlen <= 0) {
+        qlen = (n + 127) / 128;
+    }
 
     a = malloc(n * sizeof(int));
 
@@ -115,8 +130,7 @@ benchmark_quicksort(int serial, int nthreads)
     if(serial) {
         quicksort_serial(a, 0, n - 1);
     } else {
-        rc = sched_init(nthreads, (n + 127) / 128, quicksort,
-                        new_args(a, 0, n - 1));
+        rc = sched_init(nthreads, qlen, quicksort, new_args(a, 0, n - 1));
         assert(rc >= 0);
     }
 
