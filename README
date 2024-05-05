@@ -14,6 +14,8 @@ Paramètres disponibles :
 * -m   : lance le benchmark avec mandelbrot
 * -t n : où `n` est le nombre de threads à utiliser, 0 signifie qu'on utilise
          tous les cœurs disponibles.
+* -n x : où `x` est le nombre minimum de tâches simultanées supporter
+         par l'ordonnanceur
 * -s   : n'utilises pas d'ordonnanceur
 
 Exemple : quicksort en utilisant tous les cœurs disponibles
