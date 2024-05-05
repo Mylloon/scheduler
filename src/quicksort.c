@@ -105,13 +105,17 @@ quicksort(void *closure, struct scheduler *s)
 }
 
 double
-benchmark_quicksort(int serial, int nthreads)
+benchmark_quicksort(int serial, int nthreads, int qlen)
 {
     int *a;
     struct timespec begin, end;
     double delay;
     int rc;
     int n = 10 * 1024 * 1024;
+
+    if(qlen <= 0) {
+        qlen = (n + 127) / 128;
+    }
 
     a = malloc(n * sizeof(int));
 
@@ -126,8 +130,7 @@ benchmark_quicksort(int serial, int nthreads)
     if(serial) {
         quicksort_serial(a, 0, n - 1);
     } else {
-        rc = sched_init(nthreads, (n + 127) / 128, quicksort,
-                        new_args(a, 0, n - 1));
+        rc = sched_init(nthreads, qlen, quicksort, new_args(a, 0, n - 1));
         assert(rc >= 0);
     }
 

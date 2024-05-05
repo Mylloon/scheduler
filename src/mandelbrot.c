@@ -175,15 +175,19 @@ draw_serial(unsigned int *image)
 }
 
 double
-benchmark_mandelbrot(int serial, int nthreads)
+benchmark_mandelbrot(int serial, int nthreads, int qlen)
 {
     unsigned int *image;
     struct timespec begin, end;
     double delay;
     int rc;
-    int size = WIDTH * HEIGHT;
+    int n = WIDTH * HEIGHT;
 
-    if(!(image = malloc(WIDTH * HEIGHT * sizeof(unsigned int)))) {
+    if(qlen <= 0) {
+        qlen = n;
+    }
+
+    if(!(image = malloc(n * sizeof(unsigned int)))) {
         perror("Image allocation");
         return 1;
     }
@@ -193,7 +197,7 @@ benchmark_mandelbrot(int serial, int nthreads)
     if(serial) {
         draw_serial(image);
     } else {
-        rc = sched_init(nthreads, size, draw,
+        rc = sched_init(nthreads, qlen, draw,
                         new_mandelbrot_args(image, 0, 0, WIDTH, HEIGHT));
         assert(rc >= 0);
     }

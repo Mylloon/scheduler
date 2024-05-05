@@ -11,13 +11,14 @@ main(int argc, char *argv[])
 {
     int serial = 0;
     int nthreads = -1;
+    int qlen = -1;
 
     int quicksort = 0;
     int mandelbrot = 0;
     double delay;
 
     int opt;
-    while((opt = getopt(argc, argv, "qmst:")) != -1) {
+    while((opt = getopt(argc, argv, "qmst:n:")) != -1) {
         if(opt < 0) {
             goto usage;
         }
@@ -35,6 +36,9 @@ main(int argc, char *argv[])
         case 't':
             nthreads = atoi(optarg);
             break;
+        case 'n':
+            qlen = atoi(optarg);
+            break;
         default:
             goto usage;
         }
@@ -44,9 +48,9 @@ main(int argc, char *argv[])
     }
 
     if(quicksort) {
-        delay = benchmark_quicksort(serial, nthreads);
+        delay = benchmark_quicksort(serial, nthreads, qlen);
     } else if(mandelbrot) {
-        delay = benchmark_mandelbrot(serial, nthreads);
+        delay = benchmark_mandelbrot(serial, nthreads, qlen);
     } else {
         goto usage;
     }
